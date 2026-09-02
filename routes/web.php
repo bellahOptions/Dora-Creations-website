@@ -11,8 +11,10 @@ use App\Http\Controllers\Storefront\HomeController;
 use App\Http\Controllers\Storefront\OrderTrackingController;
 use App\Http\Controllers\Storefront\PageController;
 use App\Http\Controllers\Storefront\ShopController;
+use App\Livewire\Actions\Logout;
 use App\Livewire\Checkout\CheckoutPage;
 use App\Livewire\Shop\ProductBrowser;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -47,10 +49,11 @@ Route::middleware(['auth', 'verified'])->prefix('account')->name('account.')->gr
 // Named "dashboard" (not "account.dashboard") to match Breeze's default post-login redirect target.
 Route::middleware(['auth', 'verified'])->get('/account', [DashboardController::class, 'index'])->name('dashboard');
 
-// TODO(task 6): retire in favor of account.settings once the account area absorbs profile management.
-Route::view('profile', 'profile')
-    ->middleware(['auth'])
-    ->name('profile');
+Route::post('/logout', function (Request $request, Logout $logout) {
+    $logout();
+
+    return redirect()->route('home');
+})->middleware('auth')->name('logout');
 
 require __DIR__.'/auth.php';
 require __DIR__.'/webhooks.php';

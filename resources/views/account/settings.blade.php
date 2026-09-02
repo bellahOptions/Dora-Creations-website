@@ -1,3 +1,7 @@
 <x-layouts.account title="Account Settings">
-    <p class="text-ink-500">Profile, password and account-deletion settings are coming together here shortly.</p>
+    <div class="max-w-xl space-y-12">
+        <livewire:profile.update-profile-information-form />
+        <livewire:profile.update-password-form />
+        <livewire:profile.delete-user-form />
+    </div>
 </x-layouts.account>

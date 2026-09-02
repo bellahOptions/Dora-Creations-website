@@ -11,11 +11,11 @@ class ProfileTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_profile_page_is_displayed(): void
+    public function test_settings_page_is_displayed(): void
     {
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user)->get('/profile');
+        $response = $this->actingAs($user)->get(route('account.settings'));
 
         $response
             ->assertOk()
@@ -32,36 +32,30 @@ class ProfileTest extends TestCase
 
         $component = Volt::test('profile.update-profile-information-form')
             ->set('name', 'Test User')
-            ->set('email', 'test@example.com')
+            ->set('phone', '+2348011112222')
             ->call('updateProfileInformation');
 
-        $component
-            ->assertHasNoErrors()
-            ->assertNoRedirect();
+        $component->assertHasNoErrors();
 
         $user->refresh();
 
         $this->assertSame('Test User', $user->name);
-        $this->assertSame('test@example.com', $user->email);
-        $this->assertNull($user->email_verified_at);
+        $this->assertSame('+2348011112222', $user->phone);
     }
 
-    public function test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged(): void
+    public function test_email_cannot_be_changed_via_profile_form(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['email' => 'original@example.com']);
 
         $this->actingAs($user);
 
-        $component = Volt::test('profile.update-profile-information-form')
-            ->set('name', 'Test User')
-            ->set('email', $user->email)
-            ->call('updateProfileInformation');
+        Volt::test('profile.update-profile-information-form')
+            ->set('name', 'Updated Name')
+            ->set('phone', '+2348011112222')
+            ->call('updateProfileInformation')
+            ->assertHasNoErrors();
 
-        $component
-            ->assertHasNoErrors()
-            ->assertNoRedirect();
-
-        $this->assertNotNull($user->refresh()->email_verified_at);
+        $this->assertSame('original@example.com', $user->fresh()->email);
     }
 
     public function test_user_can_delete_their_account(): void
@@ -79,7 +73,10 @@ class ProfileTest extends TestCase
             ->assertRedirect('/');
 
         $this->assertGuest();
-        $this->assertNull($user->fresh());
+
+        $user->refresh();
+        $this->assertNotNull($user);
+        $this->assertTrue($user->isSuspended());
     }
 
     public function test_correct_password_must_be_provided_to_delete_account(): void
@@ -96,6 +93,6 @@ class ProfileTest extends TestCase
             ->assertHasErrors('password')
             ->assertNoRedirect();
 
-        $this->assertNotNull($user->fresh());
+        $this->assertFalse($user->fresh()->isSuspended());
     }
 }

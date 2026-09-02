@@ -52,9 +52,30 @@
                 </div>
 
                 @auth
-                    <a href="{{ route('dashboard') }}" class="hidden text-ink-700 transition hover:text-brand-500 sm:block" aria-label="Account">
-                        <x-heroicon-o-user class="h-6 w-6" />
-                    </a>
+                    <div class="hidden sm:block">
+                        <x-dropdown align="right" width="52">
+                            <x-slot name="trigger">
+                                <button class="text-ink-700 transition hover:text-brand-500" aria-label="Account menu">
+                                    <x-heroicon-o-user class="h-6 w-6" />
+                                </button>
+                            </x-slot>
+                            <x-slot name="content">
+                                <div class="border-b border-ink-100 px-4 py-2 text-xs text-ink-400">
+                                    Signed in as <span class="font-semibold text-ink-700">{{ auth()->user()->name }}</span>
+                                </div>
+                                <x-dropdown-link href="{{ route('dashboard') }}" wire:navigate>Account overview</x-dropdown-link>
+                                <x-dropdown-link href="{{ route('account.orders.index') }}" wire:navigate>My orders</x-dropdown-link>
+                                <x-dropdown-link href="{{ route('account.addresses.index') }}" wire:navigate>Addresses</x-dropdown-link>
+                                <x-dropdown-link href="{{ route('account.settings') }}" wire:navigate>Settings</x-dropdown-link>
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <x-dropdown-link href="{{ route('logout') }}" @click.prevent="$el.closest('form').submit();">
+                                        Log out
+                                    </x-dropdown-link>
+                                </form>
+                            </x-slot>
+                        </x-dropdown>
+                    </div>
                 @else
                     <a href="{{ route('login') }}" class="hidden text-ink-700 transition hover:text-brand-500 sm:block" aria-label="Login">
                         <x-heroicon-o-user class="h-6 w-6" />

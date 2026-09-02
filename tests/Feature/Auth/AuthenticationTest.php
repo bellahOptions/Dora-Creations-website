@@ -54,7 +54,7 @@ class AuthenticationTest extends TestCase
         $this->assertGuest();
     }
 
-    public function test_navigation_menu_can_be_rendered(): void
+    public function test_dashboard_can_be_rendered(): void
     {
         $user = User::factory()->create();
 
@@ -71,13 +71,25 @@ class AuthenticationTest extends TestCase
 
         $this->actingAs($user);
 
-        $component = Volt::test('layout.navigation');
+        $response = $this->post(route('logout'));
 
-        $component->call('logout');
+        $response->assertRedirect(route('home'));
 
-        $component
-            ->assertHasNoErrors()
-            ->assertRedirect('/');
+        $this->assertGuest();
+    }
+
+    public function test_suspended_users_cannot_authenticate(): void
+    {
+        $user = User::factory()->create();
+        $user->suspend();
+
+        $component = Volt::test('pages.auth.login')
+            ->set('form.email', $user->email)
+            ->set('form.password', 'password');
+
+        $component->call('login');
+
+        $component->assertHasErrors();
 
         $this->assertGuest();
     }
