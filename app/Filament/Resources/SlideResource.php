@@ -29,6 +29,7 @@ class SlideResource extends Resource
             Forms\Components\TextInput::make('subheadline')->maxLength(255),
             Forms\Components\FileUpload::make('image_path')
                 ->image()
+                ->maxSize(5120)
                 ->directory('slides')
                 ->disk('public')
                 ->required()

@@ -102,6 +102,7 @@ class ProductResource extends Resource
                         ->schema([
                             Forms\Components\FileUpload::make('path')
                                 ->image()
+                                ->maxSize(5120)
                                 ->directory('products')
                                 ->disk('public')
                                 ->required(),

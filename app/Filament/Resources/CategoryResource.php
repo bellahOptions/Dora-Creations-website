@@ -39,6 +39,7 @@ class CategoryResource extends Resource
                     ->columnSpanFull(),
                 Forms\Components\FileUpload::make('image_path')
                     ->image()
+                    ->maxSize(5120)
                     ->directory('categories')
                     ->disk('public')
                     ->columnSpanFull(),

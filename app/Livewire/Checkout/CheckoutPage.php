@@ -8,6 +8,7 @@ use App\Services\CartService;
 use App\Services\OrderService;
 use App\Services\Payments\PaymentGatewayManager;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
@@ -127,6 +128,18 @@ class CheckoutPage extends Component
         PaymentGatewayManager $gateways
     ): void {
         $this->submitting = true;
+
+        $throttleKey = 'place-order|'.request()->ip();
+
+        if (RateLimiter::tooManyAttempts($throttleKey, 10)) {
+            $this->submitting = false;
+            $this->addError('cart', 'Too many checkout attempts. Please wait a few minutes and try again.');
+
+            return;
+        }
+
+        RateLimiter::hit($throttleKey, 3600);
+
         $this->validate();
 
         $cart = $cartService->currentCart();
