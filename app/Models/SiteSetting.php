@@ -29,6 +29,14 @@ class SiteSetting extends Model
 
     public static function current(): self
     {
-        return static::query()->firstOrCreate(['id' => 1]);
+        // Explicit defaults, not just DB column defaults: firstOrCreate()'s
+        // returned instance only reflects attributes it actually set, so a
+        // bare ['id' => 1] leaves shipping_flat_rate_kobo etc. null in
+        // memory even though the DB applied its own default on insert.
+        return static::query()->firstOrCreate(['id' => 1], [
+            'maintenance_mode' => false,
+            'site_name' => 'Dora Creations',
+            'shipping_flat_rate_kobo' => 250000,
+        ]);
     }
 }
