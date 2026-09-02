@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Cart;
 
+use App\Services\CartService;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
@@ -9,11 +10,15 @@ class CartIndicator extends Component
 {
     public int $itemCount = 0;
 
-    #[On('cart-updated')]
-    public function refreshCount(): void
+    public function mount(CartService $cartService): void
     {
-        // Wired up to the real Cart model in a later pass.
-        $this->itemCount = 0;
+        $this->itemCount = $cartService->itemCount();
+    }
+
+    #[On('cart-updated')]
+    public function refreshCount(CartService $cartService): void
+    {
+        $this->itemCount = $cartService->itemCount();
     }
 
     public function openDrawer(): void

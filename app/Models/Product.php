@@ -90,6 +90,11 @@ class Product extends Model
         return Money::ngn($this->price_kobo);
     }
 
+    public function formattedCompareAtPrice(): ?string
+    {
+        return $this->compare_at_price_kobo ? Money::ngn($this->compare_at_price_kobo) : null;
+    }
+
     public function isOnSale(): bool
     {
         return $this->compare_at_price_kobo !== null && $this->compare_at_price_kobo > $this->price_kobo;

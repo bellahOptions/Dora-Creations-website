@@ -3,17 +3,29 @@
 namespace App\Http\Controllers\Storefront;
 
 use App\Http\Controllers\Controller;
+use App\Models\Product;
 use Illuminate\View\View;
 
 class ShopController extends Controller
 {
-    public function index(): View
+    public function show(Product $product): View
     {
-        return view('storefront.shop.index');
-    }
+        abort_unless($product->is_published, 404);
 
-    public function show(string $product): View
-    {
-        return view('storefront.shop.show', ['slug' => $product]);
+        $product->load(['images', 'variants', 'category', 'approvedReviews.user']);
+
+        $related = Product::query()
+            ->published()
+            ->with('images')
+            ->where('category_id', $product->category_id)
+            ->whereKeyNot($product->id)
+            ->inRandomOrder()
+            ->limit(4)
+            ->get();
+
+        return view('storefront.shop.show', [
+            'product' => $product,
+            'related' => $related,
+        ]);
     }
 }
