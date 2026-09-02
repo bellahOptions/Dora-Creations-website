@@ -1,0 +1,44 @@
+<?php
+
+namespace App\Models;
+
+use Database\Factories\SlideFactory;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
+
+class Slide extends Model
+{
+    /** @use HasFactory<SlideFactory> */
+    use HasFactory;
+
+    protected $fillable = [
+        'headline',
+        'subheadline',
+        'image_path',
+        'cta_label',
+        'cta_url',
+        'sort_order',
+        'is_active',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'is_active' => 'boolean',
+        ];
+    }
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('is_active', true)->orderBy('sort_order');
+    }
+
+    public function url(): string
+    {
+        return str_starts_with($this->image_path, 'http')
+            ? $this->image_path
+            : Storage::disk('public')->url($this->image_path);
+    }
+}
