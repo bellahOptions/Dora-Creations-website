@@ -1,6 +1,9 @@
 <?php
 
+use App\Http\Controllers\Account\AddressController;
 use App\Http\Controllers\Account\DashboardController;
+use App\Http\Controllers\Account\OrderController as AccountOrderController;
+use App\Http\Controllers\Account\SettingsController;
 use App\Http\Controllers\Storefront\CartController;
 use App\Http\Controllers\Storefront\CategoryController;
 use App\Http\Controllers\Storefront\CheckoutController;
@@ -27,10 +30,16 @@ Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.in
 
 Route::get('/track-order', [OrderTrackingController::class, 'lookup'])->name('order-tracking.lookup');
 
-Route::middleware(['auth', 'verified'])->prefix('account')->group(function () {
-    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+Route::middleware(['auth', 'verified'])->prefix('account')->name('account.')->group(function () {
+    Route::get('/orders', [AccountOrderController::class, 'index'])->name('orders.index');
+    Route::get('/addresses', [AddressController::class, 'index'])->name('addresses.index');
+    Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
 });
 
+// Named "dashboard" (not "account.dashboard") to match Breeze's default post-login redirect target.
+Route::middleware(['auth', 'verified'])->get('/account', [DashboardController::class, 'index'])->name('dashboard');
+
+// TODO(task 6): retire in favor of account.settings once the account area absorbs profile management.
 Route::view('profile', 'profile')
     ->middleware(['auth'])
     ->name('profile');
