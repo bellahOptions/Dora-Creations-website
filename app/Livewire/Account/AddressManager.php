@@ -48,9 +48,14 @@ class AddressManager extends Component
     #[Validate('boolean')]
     public bool $is_default = false;
 
-    public function mount(): void
+    public function mount(bool $selectable = false): void
     {
+        $this->selectable = $selectable;
         $this->selectedId = Auth::user()->addresses()->where('is_default', true)->first()?->id;
+
+        if ($this->selectable && $this->selectedId) {
+            $this->dispatch('address-selected', addressId: $this->selectedId);
+        }
     }
 
     public function startCreate(): void
@@ -99,7 +104,10 @@ class AddressManager extends Component
             Auth::user()->addresses()->findOrFail($this->editingId)->update($data);
         } else {
             $address = Auth::user()->addresses()->create($data);
-            $this->selectedId ??= $address->id;
+
+            if ($this->selectable && ! $this->selectedId) {
+                $this->select($address->id);
+            }
         }
 
         $this->resetForm();

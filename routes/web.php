@@ -6,11 +6,12 @@ use App\Http\Controllers\Account\OrderController as AccountOrderController;
 use App\Http\Controllers\Account\SettingsController;
 use App\Http\Controllers\Storefront\CartController;
 use App\Http\Controllers\Storefront\CategoryController;
-use App\Http\Controllers\Storefront\CheckoutController;
+use App\Http\Controllers\Storefront\CheckoutCallbackController;
 use App\Http\Controllers\Storefront\HomeController;
 use App\Http\Controllers\Storefront\OrderTrackingController;
 use App\Http\Controllers\Storefront\PageController;
 use App\Http\Controllers\Storefront\ShopController;
+use App\Livewire\Checkout\CheckoutPage;
 use App\Livewire\Shop\ProductBrowser;
 use Illuminate\Support\Facades\Route;
 
@@ -26,9 +27,16 @@ Route::get('/pages/{slug}', [PageController::class, 'show'])->name('pages.show')
 
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 
-Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+Route::middleware('throttle:20,1')->group(function () {
+    Route::get('/checkout', CheckoutPage::class)->name('checkout.index');
+    Route::get('/checkout/callback/{gateway}', CheckoutCallbackController::class)->name('checkout.callback');
+});
 
 Route::get('/track-order', [OrderTrackingController::class, 'lookup'])->name('order-tracking.lookup');
+Route::post('/track-order', [OrderTrackingController::class, 'find'])
+    ->middleware('throttle:10,1')
+    ->name('order-tracking.find');
+Route::get('/track-order/{token}', [OrderTrackingController::class, 'show'])->name('order-tracking.show');
 
 Route::middleware(['auth', 'verified'])->prefix('account')->name('account.')->group(function () {
     Route::get('/orders', [AccountOrderController::class, 'index'])->name('orders.index');
@@ -45,3 +53,4 @@ Route::view('profile', 'profile')
     ->name('profile');
 
 require __DIR__.'/auth.php';
+require __DIR__.'/webhooks.php';
