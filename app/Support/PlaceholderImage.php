@@ -31,4 +31,27 @@ SVG;
 
         return $path;
     }
+
+    /**
+     * A text-free placeholder for spots that already overlay their own
+     * heading as HTML (hero slides) — baking the label into the image too
+     * would duplicate it visually once the image is stretched/cropped.
+     */
+    public static function plain(string $background = '#1B1913', string $accent = '#F8F4EC', int $width = 1600, int $height = 900): string
+    {
+        return <<<SVG
+<svg xmlns="http://www.w3.org/2000/svg" width="{$width}" height="{$height}" viewBox="0 0 {$width} {$height}">
+    <rect width="100%" height="100%" fill="{$background}" />
+    <circle cx="{$width}" cy="0" r="{$width}" fill="{$accent}" opacity="0.06" />
+    <circle cx="0" cy="{$height}" r="{$width}" fill="{$accent}" opacity="0.06" />
+</svg>
+SVG;
+    }
+
+    public static function storePlain(string $disk, string $path, string $background = '#1B1913', string $accent = '#F8F4EC'): string
+    {
+        Storage::disk($disk)->put($path, static::plain($background, $accent));
+
+        return $path;
+    }
 }
