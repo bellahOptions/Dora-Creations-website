@@ -27,9 +27,9 @@
         <p class="text-xs uppercase tracking-wide text-ink-400">{{ $product->category?->name }}</p>
         <h3 class="mt-1 text-sm font-semibold text-ink-900 transition group-hover:text-brand-600">{{ $product->name }}</h3>
         <div class="mt-1 flex items-center gap-2">
-            <span class="text-sm font-semibold">{{ $product->formattedPrice() }}</span>
+            <span class="text-sm font-semibold">{{ $product->displayPrice() }}</span>
             @if ($product->isOnSale())
-                <span class="text-xs text-ink-400 line-through">{{ $product->formattedCompareAtPrice() }}</span>
+                <span class="text-xs text-ink-400 line-through">{{ $product->displayCompareAtPrice() }}</span>
             @endif
         </div>
     </div>

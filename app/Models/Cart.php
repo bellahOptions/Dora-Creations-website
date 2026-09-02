@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\CurrencyService;
 use App\Support\Money;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -38,5 +39,10 @@ class Cart extends Model
     public function formattedSubtotal(): string
     {
         return Money::ngn($this->subtotalKobo());
+    }
+
+    public function displaySubtotal(): string
+    {
+        return app(CurrencyService::class)->format($this->subtotalKobo());
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\CurrencyService;
 use App\Support\Money;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -39,5 +40,10 @@ class CartItem extends Model
     public function formattedLineTotal(): string
     {
         return Money::ngn($this->lineTotalKobo());
+    }
+
+    public function displayLineTotal(): string
+    {
+        return app(CurrencyService::class)->format($this->lineTotalKobo());
     }
 }

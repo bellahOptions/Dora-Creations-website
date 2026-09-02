@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\CurrencyService;
 use App\Support\Money;
 use Database\Factories\ProductFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -93,6 +94,25 @@ class Product extends Model
     public function formattedCompareAtPrice(): ?string
     {
         return $this->compare_at_price_kobo ? Money::ngn($this->compare_at_price_kobo) : null;
+    }
+
+    /**
+     * Price formatted in the visitor's selected display currency
+     * (browsing only — checkout and receipts always show NGN, the
+     * currency actually charged).
+     */
+    public function displayPrice(): string
+    {
+        return app(CurrencyService::class)->format($this->price_kobo);
+    }
+
+    public function displayCompareAtPrice(): ?string
+    {
+        if (! $this->compare_at_price_kobo) {
+            return null;
+        }
+
+        return app(CurrencyService::class)->format($this->compare_at_price_kobo);
     }
 
     public function isOnSale(): bool

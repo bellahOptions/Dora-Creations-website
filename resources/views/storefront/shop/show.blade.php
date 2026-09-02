@@ -47,9 +47,9 @@
                 <h1 class="mt-2 font-display text-3xl uppercase sm:text-4xl">{{ $product->name }}</h1>
 
                 <div class="mt-4 flex items-center gap-3">
-                    <span class="text-xl font-semibold">{{ $product->formattedPrice() }}</span>
+                    <span class="text-xl font-semibold">{{ $product->displayPrice() }}</span>
                     @if ($product->isOnSale())
-                        <span class="text-sm text-ink-400 line-through">{{ $product->formattedCompareAtPrice() }}</span>
+                        <span class="text-sm text-ink-400 line-through">{{ $product->displayCompareAtPrice() }}</span>
                     @endif
                 </div>
 

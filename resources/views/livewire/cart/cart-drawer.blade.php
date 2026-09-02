@@ -52,7 +52,7 @@
                                         <span class="w-5 text-center">{{ $item->quantity }}</span>
                                         <button wire:click="incrementItem({{ $item->id }})" class="px-1 text-ink-500 hover:text-ink-900" aria-label="Increase quantity">+</button>
                                     </div>
-                                    <span class="text-sm font-semibold">{{ $item->formattedLineTotal() }}</span>
+                                    <span class="text-sm font-semibold">{{ $item->displayLineTotal() }}</span>
                                 </div>
                             </div>
                         </li>
@@ -63,9 +63,9 @@
             <div class="border-t border-ink-100 px-6 py-5">
                 <div class="flex items-center justify-between text-sm font-semibold uppercase tracking-wide">
                     <span>Subtotal</span>
-                    <span>{{ $cart->formattedSubtotal() }}</span>
+                    <span>{{ $cart->displaySubtotal() }}</span>
                 </div>
-                <p class="mt-1 text-xs text-ink-400">Shipping and payment currency calculated at checkout.</p>
+                <p class="mt-1 text-xs text-ink-400">Shipping calculated at checkout — you'll be charged in Naira (₦).</p>
 
                 <a href="{{ route('cart.index') }}" wire:click="close"
                     class="mt-4 block rounded-full border border-ink-900 px-6 py-3 text-center text-sm font-semibold uppercase tracking-wide text-ink-900 transition hover:bg-ink-900 hover:text-paper">

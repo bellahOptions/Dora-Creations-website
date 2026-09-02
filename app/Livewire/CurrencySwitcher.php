@@ -2,42 +2,37 @@
 
 namespace App\Livewire;
 
+use App\Services\CurrencyService;
 use Livewire\Component;
 
 class CurrencySwitcher extends Component
 {
-    public string $currency;
+    public string $currentCode;
 
-    /**
-     * Placeholder list until the Currency model lands; codes map to display symbols.
-     */
-    public array $currencies = [
-        'NGN' => '₦',
-        'USD' => '$',
-        'GBP' => '£',
-        'EUR' => '€',
-        'GHS' => '₵',
-    ];
-
-    public function mount(): void
+    public function mount(CurrencyService $currencyService): void
     {
-        $this->currency = session('currency', 'NGN');
+        $this->currentCode = $currencyService->current()->code;
     }
 
-    public function selectCurrency(string $code): void
+    public function selectCurrency(string $code, CurrencyService $currencyService): void
     {
-        if (! array_key_exists($code, $this->currencies)) {
+        if (! $currencyService->active()->pluck('code')->contains($code)) {
             return;
         }
 
-        $this->currency = $code;
         session(['currency' => $code]);
+        $this->currentCode = $code;
 
-        $this->dispatch('currency-changed', currency: $code);
+        // Prices are rendered in plain Blade across the storefront, so a
+        // full reload is the simplest way to make every price on the page
+        // reflect the new currency consistently.
+        $this->dispatch('currency-changed');
     }
 
-    public function render()
+    public function render(CurrencyService $currencyService)
     {
-        return view('livewire.currency-switcher');
+        return view('livewire.currency-switcher', [
+            'currencies' => $currencyService->active(),
+        ]);
     }
 }

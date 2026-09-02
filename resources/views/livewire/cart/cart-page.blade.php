@@ -24,7 +24,7 @@
                                     @if ($item->variant)
                                         <p class="mt-1 text-sm text-ink-400">{{ $item->variant->label() }}</p>
                                     @endif
-                                    <p class="mt-1 text-sm text-ink-500">{{ \App\Support\Money::ngn($item->unit_price_kobo) }} each</p>
+                                    <p class="mt-1 text-sm text-ink-500">{{ app(\App\Services\CurrencyService::class)->format($item->unit_price_kobo) }} each</p>
 
                                     <button wire:click="removeItem({{ $item->id }})" class="mt-2 text-xs font-semibold uppercase tracking-wide text-ink-400 hover:text-brand-500">
                                         Remove
@@ -37,7 +37,7 @@
                                         <span class="w-6 text-center text-sm font-semibold">{{ $item->quantity }}</span>
                                         <button wire:click="incrementItem({{ $item->id }})" class="text-ink-500 hover:text-ink-900" aria-label="Increase quantity">+</button>
                                     </div>
-                                    <span class="font-semibold">{{ $item->formattedLineTotal() }}</span>
+                                    <span class="font-semibold">{{ $item->displayLineTotal() }}</span>
                                 </div>
                             </div>
                         </li>
@@ -55,23 +55,24 @@
                 <dl class="mt-6 space-y-3 text-sm">
                     <div class="flex justify-between">
                         <dt class="text-ink-500">Subtotal</dt>
-                        <dd class="font-semibold">{{ $cart->formattedSubtotal() }}</dd>
+                        <dd class="font-semibold">{{ $cart->displaySubtotal() }}</dd>
                     </div>
                     <div class="flex justify-between">
                         <dt class="text-ink-500">Shipping</dt>
-                        <dd class="font-semibold">{{ $shippingKobo === 0 ? 'Free' : \App\Support\Money::ngn($shippingKobo) }}</dd>
+                        <dd class="font-semibold">{{ $shippingKobo === 0 ? 'Free' : app(\App\Services\CurrencyService::class)->format($shippingKobo) }}</dd>
                     </div>
                     @if ($freeShippingThreshold && $cart->subtotalKobo() < $freeShippingThreshold)
                         <p class="text-xs text-ink-400">
-                            Add {{ \App\Support\Money::ngn($freeShippingThreshold - $cart->subtotalKobo()) }} more for free shipping.
+                            Add {{ app(\App\Services\CurrencyService::class)->format($freeShippingThreshold - $cart->subtotalKobo()) }} more for free shipping.
                         </p>
                     @endif
                 </dl>
 
                 <div class="mt-4 flex justify-between border-t border-ink-200 pt-4 text-base font-semibold">
                     <span>Total</span>
-                    <span>{{ \App\Support\Money::ngn($cart->subtotalKobo() + $shippingKobo) }}</span>
+                    <span>{{ app(\App\Services\CurrencyService::class)->format($cart->subtotalKobo() + $shippingKobo) }}</span>
                 </div>
+                <p class="mt-2 text-xs text-ink-400">You'll be charged in Naira (₦) at checkout.</p>
 
                 <a href="{{ route('checkout.index') }}" class="mt-6 block rounded-full bg-ink-900 px-6 py-3 text-center text-sm font-semibold uppercase tracking-wide text-paper transition hover:bg-brand-500">
                     Proceed to checkout
