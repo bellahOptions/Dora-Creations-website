@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasUuid;
 use App\Services\CurrencyService;
 use App\Support\Money;
 use Database\Factories\ProductFactory;
@@ -10,17 +11,21 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class Product extends Model
 {
     /** @use HasFactory<ProductFactory> */
-    use HasFactory;
+    use HasFactory, HasUuid;
 
     protected $fillable = [
         'category_id',
         'name',
         'slug',
         'description',
+        'short_description',
+        'featured_image_path',
         'price_kobo',
         'compare_at_price_kobo',
         'sku',
@@ -41,9 +46,40 @@ class Product extends Model
         ];
     }
 
+    protected static function booted(): void
+    {
+        static::creating(function (Product $product) {
+            $product->sku ??= static::generateSku();
+        });
+    }
+
+    /**
+     * DC-XXXXXX, retried until it doesn't collide — every product gets one
+     * automatically, whether created via the admin panel, a seeder, or code.
+     */
+    public static function generateSku(): string
+    {
+        do {
+            $sku = 'DC-'.strtoupper(Str::random(6));
+        } while (static::where('sku', $sku)->exists());
+
+        return $sku;
+    }
+
     public function getRouteKeyName(): string
     {
         return 'slug';
+    }
+
+    public function featuredImageUrl(): ?string
+    {
+        if ($this->featured_image_path) {
+            return str_starts_with($this->featured_image_path, 'http')
+                ? $this->featured_image_path
+                : Storage::disk('public')->url($this->featured_image_path);
+        }
+
+        return $this->images->first()?->url();
     }
 
     public function category(): BelongsTo

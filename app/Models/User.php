@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasUuid;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
@@ -14,7 +15,7 @@ use Illuminate\Notifications\Notifiable;
 class User extends Authenticatable implements FilamentUser, MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, HasUuid, Notifiable;
 
     public const STATUS_ACTIVE = 'active';
 
@@ -58,6 +59,15 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         ];
     }
 
+    /**
+     * Admin panel URLs (/admin/users/{record}) resolve by uuid, not the
+     * sequential id, so they don't reveal how many accounts exist.
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'uuid';
+    }
+
     public function addresses(): HasMany
     {
         return $this->hasMany(Address::class);
@@ -90,6 +100,6 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
 
     public function canAccessPanel(Panel $panel): bool
     {
-        return $this->is_admin && ! $this->isSuspended();
+        return $this->is_admin && ! $this->isSuspended() && $this->hasVerifiedEmail();
     }
 }

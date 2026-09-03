@@ -103,7 +103,9 @@
             <ul class="mt-4 space-y-3">
                 @foreach ($cart->items as $item)
                     <li class="flex items-center gap-3 text-sm">
-                        <img src="{{ $item->product->images->first()?->url() }}" alt="{{ $item->product->name }}" class="h-14 w-12 rounded-lg object-cover">
+                        <img src="{{ $item->product->images->first()?->url() ?? asset('placeholder.svg') }}" alt="{{ $item->product->name }}"
+                            onerror="this.onerror=null;this.src='{{ asset('placeholder.svg') }}';"
+                            class="h-14 w-12 rounded-lg object-cover">
                         <div class="flex-1">
                             <p class="font-semibold">{{ $item->product->name }}</p>
                             <p class="text-ink-400">{{ $item->variant?->label() }} · Qty {{ $item->quantity }}</p>

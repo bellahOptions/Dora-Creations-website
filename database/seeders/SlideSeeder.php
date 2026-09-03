@@ -21,7 +21,7 @@ class SlideSeeder extends Seeder
                 ['headline' => $slide['headline']],
                 [
                     'subheadline' => $slide['subheadline'],
-                    'image_path' => PlaceholderImage::storePlain('public', 'slides/slide-'.($index + 1).'.svg', $slide['background'], '#F8F4EC'),
+                    'image_path' => PlaceholderImage::storePlain('public', 'slides/slide-'.($index + 1).'.svg', $slide['background']),
                     'cta_label' => $slide['cta_label'],
                     'cta_url' => $slide['cta_url'],
                     'sort_order' => $index + 1,

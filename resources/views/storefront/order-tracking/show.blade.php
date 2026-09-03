@@ -10,6 +10,21 @@
 @endphp
 
 <x-layouts.storefront title="Order {{ $order->order_number }}">
+    @if (session('order-confirmed'))
+        <section class="border-b border-ink-100 bg-ink-900 py-10 text-center text-paper">
+            <div class="container-store">
+                <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-paper text-ink-900">
+                    <x-heroicon-o-check class="h-7 w-7" />
+                </div>
+                <h1 class="mt-4 font-display text-2xl uppercase sm:text-3xl">Order confirmed</h1>
+                <p class="mt-2 text-paper/75">
+                    Thank you — your payment went through and order <span class="font-semibold text-paper">{{ $order->order_number }}</span> is on its way to being prepared.
+                    A confirmation has been sent to {{ $order->customerEmail() }}.
+                </p>
+            </div>
+        </section>
+    @endif
+
     <section class="container-store py-14">
         <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -68,7 +83,9 @@
                 <ul class="mt-4 divide-y divide-ink-100 border-y border-ink-100">
                     @foreach ($order->items as $item)
                         <li class="flex items-center gap-4 py-4">
-                            <img src="{{ $item->product?->images->first()?->url() }}" alt="{{ $item->product_name }}" class="h-16 w-14 rounded-lg object-cover">
+                            <img src="{{ $item->product?->images->first()?->url() ?? asset('placeholder.svg') }}" alt="{{ $item->product_name }}"
+                                onerror="this.onerror=null;this.src='{{ asset('placeholder.svg') }}';"
+                                class="h-16 w-14 rounded-lg object-cover">
                             <div class="flex-1">
                                 <p class="font-semibold">{{ $item->product_name }}</p>
                                 @if ($item->variant_label)

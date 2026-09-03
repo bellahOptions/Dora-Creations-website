@@ -15,6 +15,10 @@ class OrderService
      */
     public function createFromCart(Cart $cart, array $shipping, ?User $user, ?string $guestEmail, ?string $customerNote = null): Order
     {
+        if ($user?->is_admin) {
+            throw new \RuntimeException('Admin accounts cannot place orders.');
+        }
+
         $cart->loadMissing('items.product');
 
         $settings = SiteSetting::current();

@@ -11,12 +11,12 @@
         @filamentStyles
         @livewireStyles
     </head>
-    <body class="flex min-h-screen flex-col items-center justify-center bg-paper-soft px-4 py-12 font-sans text-ink-900 antialiased">
-        <a href="{{ route('home') }}" wire:navigate class="font-display text-xl tracking-tight text-ink-900">
-            DORA <span class="text-brand-500">CREATIONS</span>
+    <body class="flex min-h-screen flex-col items-center justify-center bg-paper px-4 py-12 font-sans text-ink-900 antialiased">
+        <a href="{{ route('home') }}" wire:navigate aria-label="Dora Creations">
+            <img src="{{ asset('black-logo.svg') }}" alt="Dora Creations" class="h-9 w-auto">
         </a>
 
-        <div class="mt-8 w-full max-w-md rounded-2xl border border-ink-100 bg-paper px-8 py-8 shadow-soft">
+        <div class="mt-8 w-full max-w-md rounded-2xl border border-ink-100 bg-cream/40 px-8 py-8 shadow-soft">
             {{ $slot }}
         </div>
 

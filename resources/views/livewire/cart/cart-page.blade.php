@@ -15,7 +15,8 @@
                 <ul class="divide-y divide-ink-100 border-y border-ink-100">
                     @foreach ($cart->items as $item)
                         <li wire:key="cart-page-item-{{ $item->id }}" class="flex gap-5 py-6">
-                            <img src="{{ $item->product->images->first()?->url() }}" alt="{{ $item->product->name }}"
+                            <img src="{{ $item->product->images->first()?->url() ?? asset('placeholder.svg') }}" alt="{{ $item->product->name }}"
+                                onerror="this.onerror=null;this.src='{{ asset('placeholder.svg') }}';"
                                 class="h-28 w-24 flex-shrink-0 rounded-xl object-cover">
 
                             <div class="flex flex-1 flex-col sm:flex-row sm:items-center sm:justify-between">

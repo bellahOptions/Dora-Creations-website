@@ -41,10 +41,22 @@ class ProductResource extends Resource
                         ->options(fn () => Category::orderBy('name')->pluck('name', 'id'))
                         ->searchable()
                         ->required(),
-                    Forms\Components\Textarea::make('description')
-                        ->rows(4)
+                    Forms\Components\Textarea::make('short_description')
+                        ->label('Short description')
+                        ->helperText('A one- or two-line summary shown on product cards and in search results.')
+                        ->rows(2)
+                        ->maxLength(300)
                         ->columnSpanFull(),
-                    Forms\Components\TextInput::make('sku')->label('SKU')->maxLength(255),
+                    Forms\Components\Textarea::make('description')
+                        ->label('Full description')
+                        ->rows(6)
+                        ->columnSpanFull(),
+                    Forms\Components\TextInput::make('sku')
+                        ->label('SKU')
+                        ->disabled()
+                        ->dehydrated(false)
+                        ->placeholder('Generated automatically')
+                        ->helperText('Assigned automatically when the product is created.'),
                 ])->columns(2),
 
                 Forms\Components\Section::make('Pricing & stock')->schema([
@@ -96,24 +108,38 @@ class ProductResource extends Resource
                             ->columnSpanFull(),
                     ]),
 
-                Forms\Components\Section::make('Images')->schema([
-                    Forms\Components\Repeater::make('images')
-                        ->relationship()
-                        ->schema([
-                            Forms\Components\FileUpload::make('path')
-                                ->image()
-                                ->maxSize(5120)
-                                ->directory('products')
-                                ->disk('public')
-                                ->required(),
-                            Forms\Components\TextInput::make('alt_text')->maxLength(255),
-                            Forms\Components\TextInput::make('sort_order')->numeric()->default(0),
-                        ])
-                        ->columns(3)
-                        ->defaultItems(0)
-                        ->addActionLabel('Add image')
-                        ->columnSpanFull(),
-                ]),
+                Forms\Components\Section::make('Featured image')
+                    ->description('The primary photo used on product cards, the shop grid, and social previews.')
+                    ->schema([
+                        Forms\Components\FileUpload::make('featured_image_path')
+                            ->label('')
+                            ->image()
+                            ->maxSize(5120)
+                            ->directory('products')
+                            ->disk('public'),
+                    ]),
+
+                Forms\Components\Section::make('Gallery images')
+                    ->description('Additional photos shown in the product page gallery.')
+                    ->schema([
+                        Forms\Components\Repeater::make('images')
+                            ->relationship()
+                            ->label('')
+                            ->schema([
+                                Forms\Components\FileUpload::make('path')
+                                    ->image()
+                                    ->maxSize(5120)
+                                    ->directory('products')
+                                    ->disk('public')
+                                    ->required(),
+                                Forms\Components\TextInput::make('alt_text')->maxLength(255),
+                                Forms\Components\TextInput::make('sort_order')->numeric()->default(0),
+                            ])
+                            ->columns(3)
+                            ->defaultItems(0)
+                            ->addActionLabel('Add gallery image')
+                            ->columnSpanFull(),
+                    ]),
 
                 Forms\Components\Section::make('SEO')->schema([
                     Forms\Components\TextInput::make('meta_title')->maxLength(255),
@@ -126,8 +152,12 @@ class ProductResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn ($query) => $query->with('images'))
             ->columns([
-                Tables\Columns\ImageColumn::make('images.0.path')->disk('public')->label('Image'),
+                Tables\Columns\ImageColumn::make('featured_image_path')
+                    ->disk('public')
+                    ->label('Image')
+                    ->state(fn (Product $record) => $record->featured_image_path ?: $record->images->first()?->path),
                 Tables\Columns\TextColumn::make('name')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('category.name')->label('Category')->sortable(),
                 Tables\Columns\TextColumn::make('price_kobo')

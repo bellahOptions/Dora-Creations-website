@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
@@ -13,6 +15,16 @@ new #[Layout('layouts.guest')] class extends Component
      */
     public function sendPasswordResetLink(): void
     {
+        $throttleKey = 'forgot-password|'.request()->ip();
+
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            throw ValidationException::withMessages([
+                'email' => 'Too many attempts. Please try again in a few minutes.',
+            ]);
+        }
+
+        RateLimiter::hit($throttleKey, 3600);
+
         $this->validate([
             'email' => ['required', 'string', 'email'],
         ]);
@@ -37,25 +49,26 @@ new #[Layout('layouts.guest')] class extends Component
 }; ?>
 
 <div>
-    <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
-        {{ __('Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.') }}
-    </div>
+    <p class="font-display text-xl uppercase">Forgot your password?</p>
+    <p class="mt-2 text-sm text-ink-500">
+        {{ __('No problem. Let us know your email address and we will email you a password reset link.') }}
+    </p>
 
-    <!-- Session Status -->
-    <x-auth-session-status class="mb-4" :status="session('status')" />
+    <x-auth-session-status class="mt-4" :status="session('status')" />
 
-    <form wire:submit="sendPasswordResetLink">
-        <!-- Email Address -->
+    <form wire:submit="sendPasswordResetLink" class="mt-6 space-y-5">
         <div>
             <x-input-label for="email" :value="__('Email')" />
-            <x-text-input wire:model="email" id="email" class="block mt-1 w-full" type="email" name="email" required autofocus />
+            <x-text-input wire:model="email" id="email" class="mt-1" type="email" name="email" required autofocus autocomplete="username" />
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
 
-        <div class="flex items-center justify-end mt-4">
-            <x-primary-button>
-                {{ __('Email Password Reset Link') }}
-            </x-primary-button>
-        </div>
+        <x-primary-button class="w-full py-3">
+            {{ __('Email password reset link') }}
+        </x-primary-button>
     </form>
+
+    <p class="mt-6 text-center text-sm text-ink-500">
+        <a href="{{ route('login') }}" wire:navigate class="font-semibold text-brand-600 hover:underline">Back to sign in</a>
+    </p>
 </div>

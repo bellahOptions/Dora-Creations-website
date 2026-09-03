@@ -27,10 +27,14 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->emailVerification()
             ->brandName('Dora Creations Admin')
+            ->brandLogo(asset('black-logo.svg'))
+            ->brandLogoHeight('2rem')
             ->favicon(asset('favicon.ico'))
+            ->darkMode(false)
             ->colors([
-                'primary' => Color::hex('#CC5E1E'),
+                'primary' => Color::hex('#000000'),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')

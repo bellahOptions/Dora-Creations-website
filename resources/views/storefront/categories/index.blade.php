@@ -8,10 +8,9 @@
                 <a href="{{ route('categories.show', $category) }}"
                     x-data x-intersect.once="$el.classList.add('reveal-visible')"
                     class="reveal group relative aspect-[16/9] overflow-hidden rounded-2xl bg-ink-100">
-                    @if ($category->imageUrl())
-                        <img src="{{ $category->imageUrl() }}" alt="{{ $category->name }}"
-                            class="h-full w-full object-cover transition duration-500 group-hover:scale-110">
-                    @endif
+                    <img src="{{ $category->imageUrl() ?? asset('placeholder.svg') }}" alt="{{ $category->name }}"
+                        onerror="this.onerror=null;this.src='{{ asset('placeholder.svg') }}';"
+                        class="h-full w-full object-cover transition duration-500 group-hover:scale-110">
                     <div class="absolute inset-0 bg-gradient-to-t from-ink-900/70 via-transparent to-transparent"></div>
                     <div class="absolute bottom-5 left-5 text-paper">
                         <p class="font-display text-xl uppercase">{{ $category->name }}</p>

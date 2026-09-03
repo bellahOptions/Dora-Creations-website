@@ -43,6 +43,12 @@ class CheckoutPage extends Component
 
     public function mount(CartService $cartService): void
     {
+        if (Auth::check() && Auth::user()->is_admin) {
+            $this->redirect(route('filament.admin.pages.dashboard'));
+
+            return;
+        }
+
         if ($cartService->currentCart()->itemCount() === 0) {
             $this->redirect(route('cart.index'));
 

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\CheckMaintenanceMode;
+use App\Http\Middleware\RedirectAdminFromStorefront;
 use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -25,6 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->web(append: [
+            RedirectAdminFromStorefront::class,
             CheckMaintenanceMode::class,
         ]);
 

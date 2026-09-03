@@ -37,7 +37,7 @@ class OrderStatusTest extends TestCase
         $order = Order::factory()->paid()->create();
 
         Livewire::actingAs($admin)
-            ->test(ViewOrder::class, ['record' => $order->getRouteKey()])
+            ->test(ViewOrder::class, ['record' => $order->uuid])
             ->callAction('updateStatus', data: [
                 'status' => Order::STATUS_DELIVERED,
                 'note' => 'Left at the door.',
@@ -51,7 +51,7 @@ class OrderStatusTest extends TestCase
         $user = User::factory()->create(['is_admin' => false]);
         $order = Order::factory()->paid()->create();
 
-        $response = $this->actingAs($user)->get("/admin/orders/{$order->id}");
+        $response = $this->actingAs($user)->get("/admin/orders/{$order->uuid}");
 
         $response->assertForbidden();
     }
@@ -76,7 +76,7 @@ class OrderStatusTest extends TestCase
         ]);
 
         Livewire::actingAs($admin)
-            ->test(ViewOrder::class, ['record' => $order->getRouteKey()])
+            ->test(ViewOrder::class, ['record' => $order->uuid])
             ->callAction('refund');
 
         $this->assertSame(Order::STATUS_REJECTED_REFUNDED, $order->fresh()->status);

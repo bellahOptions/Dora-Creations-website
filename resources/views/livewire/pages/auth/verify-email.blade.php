@@ -36,23 +36,24 @@ new #[Layout('layouts.guest')] class extends Component
 }; ?>
 
 <div>
-    <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
-        {{ __('Thanks for signing up! Before getting started, could you verify your email address by clicking on the link we just emailed to you? If you didn\'t receive the email, we will gladly send you another.') }}
-    </div>
+    <p class="font-display text-xl uppercase">Verify your email</p>
+    <p class="mt-2 text-sm text-ink-500">
+        {{ __('Thanks for signing up! Before getting started, could you verify your email address by clicking the link we just emailed you? If you didn\'t receive it, we can send another.') }}
+    </p>
 
     @if (session('status') == 'verification-link-sent')
-        <div class="mb-4 font-medium text-sm text-green-600 dark:text-green-400">
-            {{ __('A new verification link has been sent to the email address you provided during registration.') }}
+        <div class="mt-4 rounded-lg bg-forest-50 px-4 py-3 text-sm font-medium text-forest-700">
+            {{ __('A new verification link has been sent to the email address you provided.') }}
         </div>
     @endif
 
-    <div class="mt-4 flex items-center justify-between">
+    <div class="mt-6 flex items-center justify-between">
         <x-primary-button wire:click="sendVerification">
-            {{ __('Resend Verification Email') }}
+            {{ __('Resend verification email') }}
         </x-primary-button>
 
-        <button wire:click="logout" type="submit" class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800">
-            {{ __('Log Out') }}
+        <button wire:click="logout" type="submit" class="text-sm font-semibold text-ink-500 underline hover:text-ink-900">
+            {{ __('Log out') }}
         </button>
     </div>
 </div>

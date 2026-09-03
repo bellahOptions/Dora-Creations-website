@@ -30,7 +30,8 @@
                 <ul class="divide-y divide-ink-100">
                     @foreach ($cart->items as $item)
                         <li wire:key="cart-drawer-item-{{ $item->id }}" class="flex gap-4 py-4">
-                            <img src="{{ $item->product->images->first()?->url() }}" alt="{{ $item->product->name }}"
+                            <img src="{{ $item->product->images->first()?->url() ?? asset('placeholder.svg') }}" alt="{{ $item->product->name }}"
+                                onerror="this.onerror=null;this.src='{{ asset('placeholder.svg') }}';"
                                 class="h-20 w-16 flex-shrink-0 rounded object-cover">
 
                             <div class="flex flex-1 flex-col">

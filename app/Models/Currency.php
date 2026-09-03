@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasUuid;
 use Database\Factories\CurrencyFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 class Currency extends Model
 {
     /** @use HasFactory<CurrencyFactory> */
-    use HasFactory;
+    use HasFactory, HasUuid;
 
     protected $fillable = [
         'code',
@@ -27,6 +28,11 @@ class Currency extends Model
             'is_base' => 'boolean',
             'is_active' => 'boolean',
         ];
+    }
+
+    public function getRouteKeyName(): string
+    {
+        return 'uuid';
     }
 
     public function scopeActive(Builder $query): Builder

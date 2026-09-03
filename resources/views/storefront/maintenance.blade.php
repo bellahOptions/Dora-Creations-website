@@ -7,7 +7,7 @@
     @vite(['resources/css/app.css'])
 </head>
 <body class="flex min-h-screen flex-col items-center justify-center bg-ink-900 px-6 text-center text-paper">
-    <p class="font-display text-xl tracking-tight">DORA <span class="text-brand-400">CREATIONS</span></p>
+    <img src="{{ asset('logo-on-dark-background.svg') }}" alt="Dora Creations" class="h-9 w-auto">
     <h1 class="mt-8 font-display text-3xl uppercase sm:text-4xl">We'll be right back</h1>
     <p class="mt-4 max-w-md text-ink-300">
         We're making a few updates to the store. Please check back shortly.

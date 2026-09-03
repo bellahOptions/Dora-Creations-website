@@ -11,6 +11,9 @@ use App\Http\Controllers\Storefront\HomeController;
 use App\Http\Controllers\Storefront\OrderTrackingController;
 use App\Http\Controllers\Storefront\PageController;
 use App\Http\Controllers\Storefront\ShopController;
+use App\Http\Controllers\LlmsTxtController;
+use App\Http\Controllers\RobotsController;
+use App\Http\Controllers\SitemapController;
 use App\Livewire\Actions\Logout;
 use App\Livewire\Checkout\CheckoutPage;
 use App\Livewire\Shop\ProductBrowser;
@@ -18,6 +21,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+
+Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
+Route::get('/llms.txt', LlmsTxtController::class)->name('llms-txt');
+Route::get('/robots.txt', RobotsController::class)->name('robots');
 
 Route::get('/shop', ProductBrowser::class)->name('shop.index');
 Route::get('/shop/{product}', [ShopController::class, 'show'])->name('shop.show');

@@ -5,8 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ $title ?? 'Dora Creations' }} — {{ config('app.name') }}</title>
-    <meta name="description" content="{{ $description ?? 'Nigerian-made fashion — tees, tote bags and more, designed and produced by Dora Creations.' }}">
+    @php
+        $seoTitle = ($title ?? 'Dora Creations').' — '.config('app.name');
+        $seoDescription = $description ?? 'Nigerian-made fashion — tees, tote bags and more, designed and produced by Dora Creations.';
+        $seoImage = $image ?? asset('logo-on-light-background.svg');
+        $seoCanonical = $canonical ?? url()->current();
+    @endphp
+
+    <title>{{ $seoTitle }}</title>
+    <meta name="description" content="{{ $seoDescription }}">
+    <link rel="canonical" href="{{ $seoCanonical }}">
+
+    <meta property="og:site_name" content="{{ config('app.name') }}">
+    <meta property="og:type" content="{{ $type ?? 'website' }}">
+    <meta property="og:title" content="{{ $seoTitle }}">
+    <meta property="og:description" content="{{ $seoDescription }}">
+    <meta property="og:url" content="{{ $seoCanonical }}">
+    <meta property="og:image" content="{{ $seoImage }}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ $seoTitle }}">
+    <meta name="twitter:description" content="{{ $seoDescription }}">
+    <meta name="twitter:image" content="{{ $seoImage }}">
+
+    <script type="application/ld+json">
+        {!! json_encode([
+            '@@context' => 'https://schema.org',
+            '@type' => 'Organization',
+            'name' => config('app.name'),
+            'url' => url('/'),
+            'logo' => asset('black-logo.svg'),
+        ], JSON_HEX_TAG) !!}
+    </script>
+    {!! $schema ?? '' !!}
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @filamentStyles
@@ -34,8 +64,8 @@
 
     <header x-data="{ mobileOpen: false }" class="sticky top-0 z-50 border-b border-ink-100 bg-paper/90 backdrop-blur">
         <div class="container-store flex h-20 items-center justify-between">
-            <a href="{{ route('home') }}" class="font-display text-xl tracking-tight text-ink-900 sm:text-2xl">
-                DORA <span class="text-brand-500">CREATIONS</span>
+            <a href="{{ route('home') }}" aria-label="Dora Creations">
+                <img src="{{ asset('black-logo.svg') }}" alt="Dora Creations" class="h-8 w-auto sm:h-9">
             </a>
 
             <nav class="hidden items-center gap-8 text-sm font-semibold uppercase tracking-wide lg:flex">
@@ -67,6 +97,9 @@
                                 <x-dropdown-link href="{{ route('account.orders.index') }}" wire:navigate>My orders</x-dropdown-link>
                                 <x-dropdown-link href="{{ route('account.addresses.index') }}" wire:navigate>Addresses</x-dropdown-link>
                                 <x-dropdown-link href="{{ route('account.settings') }}" wire:navigate>Settings</x-dropdown-link>
+                                @if (auth()->user()->canAccessPanel(\Filament\Facades\Filament::getPanel('admin')))
+                                    <x-dropdown-link href="{{ route('filament.admin.pages.dashboard') }}">Admin dashboard</x-dropdown-link>
+                                @endif
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
                                     <x-dropdown-link href="{{ route('logout') }}" @click.prevent="$el.closest('form').submit();">
@@ -106,6 +139,11 @@
                         <a href="{{ route('login') }}" class="normal-case tracking-normal text-brand-600">Login</a>
                     @endauth
                 </div>
+                @auth
+                    @if (auth()->user()->canAccessPanel(\Filament\Facades\Filament::getPanel('admin')))
+                        <a href="{{ route('filament.admin.pages.dashboard') }}" class="mt-2 rounded px-2 py-2 hover:bg-ink-50">Admin dashboard</a>
+                    @endif
+                @endauth
             </nav>
         </div>
     </header>
@@ -117,7 +155,7 @@
     <footer class="mt-24 border-t border-ink-100 bg-ink-900 text-paper">
         <div class="container-store grid gap-10 py-16 sm:grid-cols-2 lg:grid-cols-4">
             <div>
-                <p class="font-display text-lg">DORA <span class="text-brand-400">CREATIONS</span></p>
+                <img src="{{ asset('logo-on-dark-background.svg') }}" alt="Dora Creations" class="h-8 w-auto">
                 <p class="mt-4 max-w-xs text-sm text-ink-200">
                     Nigerian-made fashion — tees, tote bags and more — designed and produced by
                     Dora herself, with a creative design &amp; printing studio behind the scenes.

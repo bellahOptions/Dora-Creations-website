@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasUuid;
 use App\Support\Money;
 use Database\Factories\OrderFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,7 +14,7 @@ use Illuminate\Support\Str;
 class Order extends Model
 {
     /** @use HasFactory<OrderFactory> */
-    use HasFactory;
+    use HasFactory, HasUuid;
 
     public const STATUS_PENDING_PAYMENT = 'pending_payment';
 
@@ -67,6 +68,16 @@ class Order extends Model
         return [
             'paid_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Admin panel URLs (/admin/orders/{record}) resolve by uuid, not the
+     * sequential id, so they don't reveal order volume. Customer-facing
+     * order tracking uses its own public_token and never touches this.
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'uuid';
     }
 
     protected static function booted(): void

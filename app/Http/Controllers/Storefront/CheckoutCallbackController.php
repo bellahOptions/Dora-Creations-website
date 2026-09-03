@@ -26,6 +26,7 @@ class CheckoutCallbackController extends Controller
             return redirect()->route('checkout.index')->with('checkout-error', 'Your payment could not be confirmed. Please try again.');
         }
 
-        return redirect()->route('order-tracking.show', $order->public_token);
+        return redirect()->route('order-tracking.show', $order->public_token)
+            ->with('order-confirmed', true);
     }
 }

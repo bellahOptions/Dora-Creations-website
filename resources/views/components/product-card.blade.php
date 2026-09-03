@@ -4,11 +4,11 @@
     x-data x-intersect.once="$el.classList.add('reveal-visible')"
     class="reveal group block">
     <div class="relative aspect-[4/5] overflow-hidden rounded-2xl bg-ink-100">
-        @if ($product->images->first())
-            <img src="{{ $product->images->first()->url() }}" alt="{{ $product->images->first()->alt_text ?? $product->name }}"
-                loading="lazy"
-                class="h-full w-full object-cover transition duration-500 group-hover:scale-105">
-        @endif
+        <img src="{{ $product->featuredImageUrl() ?? asset('placeholder.svg') }}"
+            alt="{{ $product->images->first()->alt_text ?? $product->name }}"
+            loading="lazy"
+            onerror="this.onerror=null;this.src='{{ asset('placeholder.svg') }}';"
+            class="h-full w-full object-cover transition duration-500 group-hover:scale-105">
 
         @if ($product->isOnSale())
             <span class="absolute left-3 top-3 rounded-full bg-brand-500 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-paper">
