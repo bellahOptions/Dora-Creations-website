@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Support\Cloudinary\CloudinaryAdapter;
 use Illuminate\Filesystem\FilesystemAdapter as LaravelFilesystemAdapter;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
@@ -26,6 +27,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Some MySQL/MariaDB hosts (older InnoDB row format defaults) can't index
+        // a full varchar(255) under the utf8mb4 charset — cap it so migrations don't
+        // exceed the key-length limit on unique/indexed string columns.
+        Schema::defaultStringLength(191);
+
         if ($this->app->environment('production')) {
             URL::forceScheme('https');
         }
