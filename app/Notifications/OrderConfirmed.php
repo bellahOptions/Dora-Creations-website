@@ -22,7 +22,7 @@ class OrderConfirmed extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject("Order {$this->order->order_number} confirmed — Dora Creations")
+            ->subject("Order {$this->order->order_number} confirmed, Dora Creations")
             ->markdown('mail.orders.confirmed', ['order' => $this->order]);
     }
 }

@@ -7,7 +7,7 @@
     @elseif ($this->eligibleOrderItem)
         <form wire:submit="submit" class="rounded-2xl border border-ink-100 p-6">
             <p class="font-display text-lg uppercase">Write a review</p>
-            <p class="mt-1 text-sm text-ink-500">You purchased this — share what you thought.</p>
+            <p class="mt-1 text-sm text-ink-500">You purchased this; share what you thought.</p>
 
             <div class="mt-4">
                 <x-input-label value="Rating" />

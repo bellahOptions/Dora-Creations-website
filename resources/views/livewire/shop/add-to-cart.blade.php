@@ -40,7 +40,7 @@
     @if ($product->is_preorder)
         <div class="flex items-center gap-2 rounded-lg bg-cream/40 px-4 py-3 text-sm text-ink-700">
             <x-heroicon-o-clock class="h-5 w-5 flex-shrink-0 text-ink-500" />
-            <span><span class="font-semibold">Pre-order</span> — {{ $product->preorderLabel() }}</span>
+            <span><span class="font-semibold">Pre-order</span>, {{ $product->preorderLabel() }}</span>
         </div>
     @endif
 

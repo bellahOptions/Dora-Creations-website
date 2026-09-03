@@ -29,3 +29,8 @@ Route::middleware('auth')->group(function () {
     Volt::route('confirm-password', 'pages.auth.confirm-password')
         ->name('password.confirm');
 });
+
+Route::middleware(['signed', 'throttle:10,1'])->group(function () {
+    Volt::route('admin/setup/{user}', 'pages.auth.admin-setup')
+        ->name('admin.setup');
+});

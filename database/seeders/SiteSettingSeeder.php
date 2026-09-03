@@ -14,8 +14,8 @@ class SiteSettingSeeder extends Seeder
         $settings->update([
             'maintenance_mode' => false,
             'site_name' => 'Dora Creations',
-            'meta_title' => 'Dora Creations — Nigerian-made fashion',
-            'meta_description' => 'Tees, tote bags and more — designed and produced by hand by Dora Creations.',
+            'meta_title' => 'Dora Creations, Nigerian-made fashion',
+            'meta_description' => 'Tees, tote bags and more, designed and produced by hand by Dora Creations.',
             'contact_email' => 'hello@doracreations.test',
             'contact_phone' => '+2348012345678',
             'social_instagram' => 'https://instagram.com/doracreations',

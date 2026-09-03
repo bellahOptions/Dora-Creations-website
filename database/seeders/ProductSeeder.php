@@ -49,7 +49,7 @@ class ProductSeeder extends Seeder
                     'name' => $data['name'],
                     'slug' => $slug,
                     'short_description' => "Handmade {$data['category']} piece from the Dora Creations studio.",
-                    'description' => "The {$data['name']} — designed and made by hand at the Dora Creations studio. Premium fabric, small-batch production, built to last.",
+                    'description' => "The {$data['name']}, designed and made by hand at the Dora Creations studio. Premium fabric, small-batch production, built to last.",
                     'price_kobo' => $data['price'] * 100,
                     'compare_at_price_kobo' => null,
                     'stock_quantity' => $hasVariants ? 0 : random_int(15, 60),

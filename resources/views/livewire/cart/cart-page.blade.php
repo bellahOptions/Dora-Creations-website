@@ -78,7 +78,7 @@
                 <a href="{{ route('checkout.index') }}" class="mt-6 block rounded-full bg-ink-900 px-6 py-3 text-center text-sm font-semibold uppercase tracking-wide text-paper transition hover:bg-brand-500">
                     Proceed to checkout
                 </a>
-                <p class="mt-3 text-center text-xs text-ink-400">No account needed — checkout as a guest or sign in.</p>
+                <p class="mt-3 text-center text-xs text-ink-400">No account needed, checkout as a guest or sign in.</p>
             </div>
         </div>
     @endif

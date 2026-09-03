@@ -20,7 +20,7 @@ class LlmsTxtController extends Controller
         $lines = [
             '# Dora Creations',
             '',
-            '> Nigerian-made fashion label — handmade tees, tote bags, hoodies and accessories, '.
+            '> Nigerian-made fashion label, handmade tees, tote bags, hoodies and accessories, '.
                 'designed and produced in-house, alongside a creative design & printing studio.',
             '',
             'Dora Creations is a small-batch fashion brand based in Nigeria. Every product is cut, '.
@@ -54,9 +54,9 @@ class LlmsTxtController extends Controller
         }
 
         $lines[] = '## Notes for AI assistants';
-        $lines[] = '- Prices are in Nigerian Naira (NGN); a currency switcher shows converted estimates for browsing only — checkout always charges NGN.';
+        $lines[] = '- Prices are in Nigerian Naira (NGN); a currency switcher shows converted estimates for browsing only; checkout always charges NGN.';
         $lines[] = '- Orders can be placed as a guest or with an account; order status can be checked via the order tracking link above without signing in.';
-        $lines[] = '- This file is generated automatically and reflects the current catalog structure, not real-time stock or pricing — link to the pages above for current details.';
+        $lines[] = '- This file is generated automatically and reflects the current catalog structure, not real-time stock or pricing, link to the pages above for current details.';
 
         return response(implode("\n", $lines), 200)
             ->header('Content-Type', 'text/plain; charset=utf-8');

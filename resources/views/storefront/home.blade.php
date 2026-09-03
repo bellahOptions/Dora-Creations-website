@@ -123,7 +123,7 @@
             <h2 class="mt-3 font-display text-2xl uppercase sm:text-3xl">Made by hand, piece by piece</h2>
             <p class="mt-4 max-w-md text-ink-500">
                 Every tee, tote and hoodie is designed and produced by Dora herself. Behind the fashion line
-                sits a full creative design &amp; printing studio — the same craft, put to work for brands
+                sits a full creative design &amp; printing studio, the same craft, put to work for brands
                 and individuals across Nigeria.
             </p>
             <a href="{{ route('pages.show', 'design-and-printing') }}" class="mt-6 inline-flex items-center text-sm font-semibold uppercase tracking-wide text-ink-900 hover:text-brand-600">

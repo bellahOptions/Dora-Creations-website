@@ -66,7 +66,7 @@
                     <span>Subtotal</span>
                     <span>{{ $cart->displaySubtotal() }}</span>
                 </div>
-                <p class="mt-1 text-xs text-ink-400">Shipping calculated at checkout — you'll be charged in Naira (₦).</p>
+                <p class="mt-1 text-xs text-ink-400">Shipping calculated at checkout; you'll be charged in Naira (₦).</p>
 
                 <a href="{{ route('cart.index') }}" wire:click="close"
                     class="mt-4 block rounded-full border border-ink-900 px-6 py-3 text-center text-sm font-semibold uppercase tracking-wide text-ink-900 transition hover:bg-ink-900 hover:text-paper">

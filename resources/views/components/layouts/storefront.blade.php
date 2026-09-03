@@ -6,8 +6,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     @php
-        $seoTitle = ($title ?? 'Dora Creations').' — '.config('app.name');
-        $seoDescription = $description ?? 'Nigerian-made fashion — tees, tote bags and more, designed and produced by Dora Creations.';
+        $seoTitle = ($title ?? 'Dora Creations').', '.config('app.name');
+        $seoDescription = $description ?? 'Nigerian-made fashion, tees, tote bags and more, designed and produced by Dora Creations.';
         $seoImage = $image ?? asset('logo-on-light-background.svg');
         $seoCanonical = $canonical ?? url()->current();
     @endphp
@@ -161,7 +161,7 @@
             <div>
                 <img src="{{ asset('logo-on-dark-background.svg') }}" alt="Dora Creations" class="h-8 w-auto">
                 <p class="mt-4 max-w-xs text-sm text-ink-200">
-                    Nigerian-made fashion — tees, tote bags and more — designed and produced by
+                    Nigerian-made fashion, tees, tote bags and more, designed and produced by
                     Dora herself, with a creative design &amp; printing studio behind the scenes.
                 </p>
             </div>
@@ -188,7 +188,7 @@
 
             <div>
                 <p class="text-xs font-semibold uppercase tracking-[0.2em] text-ink-300">Secure payments</p>
-                <p class="mt-4 text-sm text-ink-200">We accept Paystack and Flutterwave — choose whichever works best for you at checkout.</p>
+                <p class="mt-4 text-sm text-ink-200">We accept Paystack and Flutterwave; choose whichever works best for you at checkout.</p>
             </div>
         </div>
 

@@ -29,7 +29,7 @@ class DiscountCodeResource extends Resource
                     ->required()
                     ->maxLength(50)
                     ->unique(ignoreRecord: true)
-                    ->helperText('Customers enter this at checkout — not case-sensitive.'),
+                    ->helperText('Customers enter this at checkout, not case-sensitive.'),
                 Forms\Components\Select::make('type')
                     ->options([
                         DiscountCode::TYPE_PERCENTAGE => 'Percentage off',

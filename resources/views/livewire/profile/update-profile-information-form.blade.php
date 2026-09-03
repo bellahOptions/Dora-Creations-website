@@ -104,7 +104,7 @@ new class extends Component
         <div>
             <x-input-label value="Email" />
             <p class="mt-1 text-sm text-ink-600">{{ auth()->user()->email }}</p>
-            <p class="mt-1 text-xs text-ink-400">Your email address can't be changed here — contact support if you need it updated.</p>
+            <p class="mt-1 text-xs text-ink-400">Your email address can't be changed here; contact support if you need it updated.</p>
 
             @unless (auth()->user()->hasVerifiedEmail())
                 <div>

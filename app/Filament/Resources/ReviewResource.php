@@ -38,7 +38,7 @@ class ReviewResource extends Resource
                     ->required(),
                 Forms\Components\TextInput::make('reviewer_name')
                     ->label('Reviewer name')
-                    ->helperText('Used for testimonials imported from social media/WhatsApp — leave blank when linking a real customer account below.')
+                    ->helperText('Used for testimonials imported from social media/WhatsApp; leave blank when linking a real customer account below.')
                     ->maxLength(255),
                 Forms\Components\Select::make('rating')
                     ->options([1 => '★☆☆☆☆', 2 => '★★☆☆☆', 3 => '★★★☆☆', 4 => '★★★★☆', 5 => '★★★★★'])
@@ -47,7 +47,7 @@ class ReviewResource extends Resource
                 Forms\Components\Textarea::make('body')->rows(4)->columnSpanFull(),
                 Forms\Components\FileUpload::make('screenshot_path')
                     ->label('Screenshot')
-                    ->helperText('A screenshot of a testimonial from Instagram, WhatsApp, etc. — shown alongside the review.')
+                    ->helperText('A screenshot of a testimonial from Instagram, WhatsApp, etc., shown alongside the review.')
                     ->image()
                     ->maxSize(5120)
                     ->directory('reviews')

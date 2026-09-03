@@ -31,7 +31,7 @@ new class extends Component
     <header>
         <h2 class="font-display text-lg uppercase">Delete account</h2>
         <p class="mt-1 text-sm text-ink-500">
-            This deactivates your account — you'll be signed out and won't be able to log back in.
+            This deactivates your account; you'll be signed out and won't be able to log back in.
             Your order history is kept; contact us if you'd like it fully removed.
         </p>
     </header>

@@ -76,7 +76,7 @@
 
             <section>
                 <h2 class="font-display text-lg uppercase">Payment method</h2>
-                <p class="mt-1 text-sm text-ink-500">Choose whichever works best for you — both are secure.</p>
+                <p class="mt-1 text-sm text-ink-500">Choose whichever works best for you; both are secure.</p>
 
                 <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                     @foreach ($gateways as $key => $gatewayInstance)
@@ -123,7 +123,7 @@
             <div class="mt-6 border-t border-ink-200 pt-4">
                 @if ($appliedCouponCode && $discount)
                     <div class="flex items-center justify-between rounded-lg bg-cream/40 px-3 py-2 text-sm">
-                        <span class="font-semibold text-ink-900">{{ $appliedCouponCode }} applied — {{ $discount->label() }}</span>
+                        <span class="font-semibold text-ink-900">{{ $appliedCouponCode }} applied, {{ $discount->label() }}</span>
                         <button type="button" wire:click="removeCoupon" class="text-xs font-semibold uppercase text-ink-500 hover:text-ink-900">Remove</button>
                     </div>
                 @else

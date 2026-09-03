@@ -77,7 +77,7 @@ class ProductResource extends Resource
                         ->label('Stock quantity')
                         ->numeric()
                         ->default(0)
-                        ->helperText('Ignored when variants are enabled — each variant tracks its own stock.'),
+                        ->helperText('Ignored when variants are enabled; each variant tracks its own stock.'),
                     Forms\Components\Toggle::make('has_variants')
                         ->label('This product has size/color variants')
                         ->live(),

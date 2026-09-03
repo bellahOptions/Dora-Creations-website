@@ -1,7 +1,7 @@
 <x-mail::message>
 # Thank you for your order!
 
-We've received your payment — order `{{ $order->order_number }}` is now being prepared.
+We've received your payment; order `{{ $order->order_number }}` is now being prepared.
 
 <x-mail::panel>
 **Subtotal:** `{{ $order->formattedSubtotal() }}`

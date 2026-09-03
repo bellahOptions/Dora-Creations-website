@@ -18,7 +18,7 @@
                 </div>
                 <h1 class="mt-4 font-display text-2xl uppercase sm:text-3xl">Order confirmed</h1>
                 <p class="mt-2 text-paper/75">
-                    Thank you — your payment went through and order <span class="font-semibold text-paper">{{ $order->order_number }}</span> is on its way to being prepared.
+                    Thank you, your payment went through and order <span class="font-semibold text-paper">{{ $order->order_number }}</span> is on its way to being prepared.
                     A confirmation has been sent to {{ $order->customerEmail() }}.
                 </p>
             </div>
@@ -31,7 +31,7 @@
                 <p class="text-xs font-semibold uppercase tracking-wide text-brand-600">Order {{ $order->order_number }}</p>
                 <h1 class="mt-1 font-display text-2xl uppercase sm:text-3xl">{{ $order->statusLabel() }}</h1>
                 @if ($order->hasPreorderItems())
-                    <p class="mt-2 text-sm text-ink-500">This order includes pre-order items — they'll ship once available.</p>
+                    <p class="mt-2 text-sm text-ink-500">This order includes pre-order items; they'll ship once available.</p>
                 @endif
             </div>
 

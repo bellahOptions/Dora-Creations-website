@@ -123,7 +123,7 @@
                     </div>
                     <div>
                         <p class="font-semibold text-ink-700">Naija-wide delivery</p>
-                        <p class="mt-1">Pay with Paystack or Flutterwave — track your order after checkout.</p>
+                        <p class="mt-1">Pay with Paystack or Flutterwave; track your order after checkout.</p>
                     </div>
                 </div>
             </div>
@@ -162,7 +162,7 @@
                     @endforeach
                 </div>
             @else
-                <p class="mt-4 text-sm text-ink-500">No reviews yet — be the first to share your thoughts.</p>
+                <p class="mt-4 text-sm text-ink-500">No reviews yet, be the first to share your thoughts.</p>
             @endif
 
             <div class="mt-8">

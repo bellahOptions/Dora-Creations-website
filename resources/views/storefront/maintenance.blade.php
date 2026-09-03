@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>We'll be right back — Dora Creations</title>
+    <title>We'll be right back, Dora Creations</title>
     @vite(['resources/css/app.css'])
 </head>
 <body class="flex min-h-screen flex-col items-center justify-center bg-ink-900 px-6 text-center text-paper">
