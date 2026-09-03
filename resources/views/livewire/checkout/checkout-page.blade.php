@@ -107,7 +107,12 @@
                             onerror="this.onerror=null;this.src='{{ asset('placeholder.svg') }}';"
                             class="h-14 w-12 rounded-lg object-cover">
                         <div class="flex-1">
-                            <p class="font-semibold">{{ $item->product->name }}</p>
+                            <p class="font-semibold">
+                                {{ $item->product->name }}
+                                @if ($item->product->is_preorder)
+                                    <span class="ml-1 rounded-full bg-ink-900 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-paper">Pre-order</span>
+                                @endif
+                            </p>
                             <p class="text-ink-400">{{ $item->variant?->label() }} · Qty {{ $item->quantity }}</p>
                         </div>
                         <span class="font-semibold">{{ $item->formattedLineTotal() }}</span>
@@ -115,20 +120,46 @@
                 @endforeach
             </ul>
 
-            <dl class="mt-6 space-y-3 border-t border-ink-200 pt-4 text-sm">
+            <div class="mt-6 border-t border-ink-200 pt-4">
+                @if ($appliedCouponCode && $discount)
+                    <div class="flex items-center justify-between rounded-lg bg-cream/40 px-3 py-2 text-sm">
+                        <span class="font-semibold text-ink-900">{{ $appliedCouponCode }} applied — {{ $discount->label() }}</span>
+                        <button type="button" wire:click="removeCoupon" class="text-xs font-semibold uppercase text-ink-500 hover:text-ink-900">Remove</button>
+                    </div>
+                @else
+                    <div class="flex gap-2">
+                        <x-text-input wire:model="couponCode" type="text" placeholder="Discount code" class="flex-1 uppercase placeholder:normal-case" />
+                        <button type="button" wire:click="applyCoupon" wire:loading.attr="disabled" wire:target="applyCoupon"
+                            class="rounded-lg border border-ink-900 px-4 text-sm font-semibold uppercase tracking-wide text-ink-900 transition hover:bg-ink-900 hover:text-paper">
+                            Apply
+                        </button>
+                    </div>
+                    @if ($couponError)
+                        <p class="mt-2 text-xs text-red-600">{{ $couponError }}</p>
+                    @endif
+                @endif
+            </div>
+
+            <dl class="mt-4 space-y-3 border-t border-ink-200 pt-4 text-sm">
                 <div class="flex justify-between">
                     <dt class="text-ink-500">Subtotal</dt>
-                    <dd class="font-semibold">{{ $cart->formattedSubtotal() }}</dd>
+                    <dd class="font-mono font-semibold">{{ $cart->formattedSubtotal() }}</dd>
                 </div>
+                @if ($discountKobo > 0)
+                    <div class="flex justify-between">
+                        <dt class="text-ink-500">Discount</dt>
+                        <dd class="font-mono font-semibold">−{{ \App\Support\Money::ngn($discountKobo) }}</dd>
+                    </div>
+                @endif
                 <div class="flex justify-between">
                     <dt class="text-ink-500">Shipping</dt>
-                    <dd class="font-semibold">{{ $shippingKobo === 0 ? 'Free' : \App\Support\Money::ngn($shippingKobo) }}</dd>
+                    <dd class="font-mono font-semibold">{{ $shippingKobo === 0 ? 'Free' : \App\Support\Money::ngn($shippingKobo) }}</dd>
                 </div>
             </dl>
 
             <div class="mt-4 flex justify-between border-t border-ink-200 pt-4 text-base font-semibold">
                 <span>Total (charged in NGN)</span>
-                <span>{{ \App\Support\Money::ngn($cart->subtotalKobo() + $shippingKobo) }}</span>
+                <span class="font-mono">{{ \App\Support\Money::ngn(max(0, $cart->subtotalKobo() + $shippingKobo - $discountKobo)) }}</span>
             </div>
 
             <x-input-error :messages="$errors->get('cart')" class="mt-2" />

@@ -38,12 +38,20 @@ class CurrencyResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('code')->searchable(),
-                Tables\Columns\TextColumn::make('symbol'),
-                Tables\Columns\TextColumn::make('rate_to_ngn')->label('Rate (NGN)')->numeric(decimalPlaces: 2),
-                Tables\Columns\IconColumn::make('is_base')->boolean()->label('Base currency'),
-                Tables\Columns\IconColumn::make('is_active')->boolean(),
-                Tables\Columns\TextColumn::make('updated_at')->dateTime('d M Y, H:i')->label('Last updated'),
+                Tables\Columns\Layout\Split::make([
+                    Tables\Columns\Layout\Stack::make([
+                        Tables\Columns\TextColumn::make('code')->searchable()->weight('bold'),
+                        Tables\Columns\TextColumn::make('symbol')->color('gray')->size('sm'),
+                    ]),
+                    Tables\Columns\Layout\Stack::make([
+                        Tables\Columns\TextColumn::make('rate_to_ngn')->label('Rate (NGN)')->numeric(decimalPlaces: 2),
+                        Tables\Columns\TextColumn::make('updated_at')->dateTime('d M Y, H:i')->label('Last updated')->color('gray')->size('sm'),
+                    ]),
+                    Tables\Columns\Layout\Stack::make([
+                        Tables\Columns\IconColumn::make('is_base')->boolean()->label('Base currency'),
+                        Tables\Columns\IconColumn::make('is_active')->boolean(),
+                    ])->alignEnd(),
+                ])->from('md'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

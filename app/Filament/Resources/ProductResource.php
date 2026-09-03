@@ -25,7 +25,7 @@ class ProductResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\Group::make()->schema([
+            Forms\Components\Group::make()->columnSpanFull()->schema([
                 Forms\Components\Section::make('Details')->schema([
                     Forms\Components\TextInput::make('name')
                         ->required()
@@ -85,6 +85,25 @@ class ProductResource extends Resource
                     Forms\Components\Toggle::make('is_featured'),
                 ])->columns(2),
 
+                Forms\Components\Section::make('Pre-order')
+                    ->description('Let customers pay in advance for a product that isn\'t in stock yet.')
+                    ->schema([
+                        Forms\Components\Toggle::make('is_preorder')
+                            ->label('This is a pre-order product')
+                            ->helperText('When on, customers can buy it even with zero stock.')
+                            ->live()
+                            ->columnSpanFull(),
+                        Forms\Components\DatePicker::make('preorder_release_date')
+                            ->label('Expected release date (optional)')
+                            ->visible(fn (Forms\Get $get) => (bool) $get('is_preorder')),
+                        Forms\Components\TextInput::make('preorder_note')
+                            ->label('Custom note (optional)')
+                            ->placeholder('e.g. Ships in 4–6 weeks')
+                            ->helperText('Overrides the release date message when set.')
+                            ->maxLength(255)
+                            ->visible(fn (Forms\Get $get) => (bool) $get('is_preorder')),
+                    ])->columns(2),
+
                 Forms\Components\Section::make('Variants')
                     ->visible(fn (Forms\Get $get) => (bool) $get('has_variants'))
                     ->schema([
@@ -116,7 +135,7 @@ class ProductResource extends Resource
                             ->image()
                             ->maxSize(5120)
                             ->directory('products')
-                            ->disk('public'),
+                            ->disk(config('filesystems.image_disk')),
                     ]),
 
                 Forms\Components\Section::make('Gallery images')
@@ -130,7 +149,7 @@ class ProductResource extends Resource
                                     ->image()
                                     ->maxSize(5120)
                                     ->directory('products')
-                                    ->disk('public')
+                                    ->disk(config('filesystems.image_disk'))
                                     ->required(),
                                 Forms\Components\TextInput::make('alt_text')->maxLength(255),
                                 Forms\Components\TextInput::make('sort_order')->numeric()->default(0),
@@ -154,19 +173,29 @@ class ProductResource extends Resource
         return $table
             ->modifyQueryUsing(fn ($query) => $query->with('images'))
             ->columns([
-                Tables\Columns\ImageColumn::make('featured_image_path')
-                    ->disk('public')
-                    ->label('Image')
-                    ->state(fn (Product $record) => $record->featured_image_path ?: $record->images->first()?->path),
-                Tables\Columns\TextColumn::make('name')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('category.name')->label('Category')->sortable(),
-                Tables\Columns\TextColumn::make('price_kobo')
-                    ->label('Price')
-                    ->formatStateUsing(fn ($state) => '₦'.number_format($state / 100, 2))
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('stock_quantity')->label('Stock')->sortable(),
-                Tables\Columns\IconColumn::make('is_published')->boolean()->label('Published'),
-                Tables\Columns\IconColumn::make('is_featured')->boolean()->label('Featured'),
+                Tables\Columns\Layout\Split::make([
+                    Tables\Columns\ImageColumn::make('featured_image_path')
+                        ->disk(config('filesystems.image_disk'))
+                        ->label('Image')
+                        ->state(fn (Product $record) => $record->featured_image_path ?: $record->images->first()?->path)
+                        ->grow(false),
+                    Tables\Columns\Layout\Stack::make([
+                        Tables\Columns\TextColumn::make('name')->searchable()->sortable()->weight('bold'),
+                        Tables\Columns\TextColumn::make('category.name')->label('Category')->sortable()->color('gray')->size('sm'),
+                    ]),
+                    Tables\Columns\Layout\Stack::make([
+                        Tables\Columns\TextColumn::make('price_kobo')
+                            ->label('Price')
+                            ->formatStateUsing(fn ($state) => '₦'.number_format($state / 100, 2))
+                            ->sortable(),
+                        Tables\Columns\TextColumn::make('stock_quantity')->label('Stock')->sortable()->color('gray')->size('sm'),
+                    ])->alignEnd(),
+                    Tables\Columns\Layout\Stack::make([
+                        Tables\Columns\ToggleColumn::make('is_published')->label('Published'),
+                        Tables\Columns\ToggleColumn::make('is_featured')->label('Featured'),
+                        Tables\Columns\ToggleColumn::make('is_preorder')->label('Pre-order'),
+                    ]),
+                ])->from('md'),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
@@ -175,6 +204,7 @@ class ProductResource extends Resource
                     ->options(fn () => Category::orderBy('name')->pluck('name', 'id')),
                 Tables\Filters\TernaryFilter::make('is_published'),
                 Tables\Filters\TernaryFilter::make('is_featured'),
+                Tables\Filters\TernaryFilter::make('is_preorder'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

@@ -3,6 +3,7 @@
 namespace App\Livewire\Checkout;
 
 use App\Models\Address;
+use App\Models\DiscountCode;
 use App\Models\SiteSetting;
 use App\Services\CartService;
 use App\Services\OrderService;
@@ -36,6 +37,12 @@ class CheckoutPage extends Component
     public string $postal_code = '';
 
     public string $customerNote = '';
+
+    public string $couponCode = '';
+
+    public ?string $appliedCouponCode = null;
+
+    public string $couponError = '';
 
     public string $gateway = 'paystack';
 
@@ -128,6 +135,43 @@ class CheckoutPage extends Component
         ];
     }
 
+    public function applyCoupon(CartService $cartService): void
+    {
+        $this->couponError = '';
+        $code = trim($this->couponCode);
+
+        if ($code === '') {
+            return;
+        }
+
+        $throttleKey = 'apply-coupon|'.request()->ip();
+
+        if (RateLimiter::tooManyAttempts($throttleKey, 15)) {
+            $this->couponError = 'Too many attempts. Please wait a few minutes and try again.';
+
+            return;
+        }
+
+        RateLimiter::hit($throttleKey, 3600);
+
+        $subtotal = $cartService->currentCart()->subtotalKobo();
+
+        if (! DiscountCode::findValid($code, $subtotal)) {
+            $this->couponError = 'That code is invalid, expired, or doesn\'t apply to this order.';
+
+            return;
+        }
+
+        $this->appliedCouponCode = $code;
+        $this->couponCode = '';
+    }
+
+    public function removeCoupon(): void
+    {
+        $this->appliedCouponCode = null;
+        $this->couponError = '';
+    }
+
     public function placeOrder(
         CartService $cartService,
         OrderService $orderService,
@@ -163,6 +207,7 @@ class CheckoutPage extends Component
             Auth::user(),
             Auth::check() ? null : $this->email,
             $this->customerNote ?: null,
+            $this->appliedCouponCode,
         );
 
         $gatewayService = $gateways->get($this->gateway);
@@ -196,10 +241,26 @@ class CheckoutPage extends Component
             ? 0
             : $settings->shipping_flat_rate_kobo;
 
+        $discount = null;
+        $discountKobo = 0;
+
+        if ($this->appliedCouponCode) {
+            $discount = DiscountCode::findValid($this->appliedCouponCode, $subtotal);
+
+            if ($discount) {
+                $discountKobo = $discount->calculateDiscount($subtotal);
+            } else {
+                // Became invalid since it was applied (expired, hit its cap) — drop it quietly.
+                $this->appliedCouponCode = null;
+            }
+        }
+
         return view('livewire.checkout.checkout-page', [
             'gateways' => $gateways->all(),
             'cart' => $cart,
             'shippingKobo' => $shippingKobo,
+            'discount' => $discount,
+            'discountKobo' => $discountKobo,
         ]);
     }
 }

@@ -65,22 +65,31 @@ class Finance extends Page implements HasTable
         return $table
             ->query(Payment::query()->with('order')->latest())
             ->columns([
-                Tables\Columns\TextColumn::make('created_at')->label('Date')->dateTime('d M Y, H:i')->sortable(),
-                Tables\Columns\TextColumn::make('order.order_number')->label('Order'),
-                Tables\Columns\TextColumn::make('gateway')->formatStateUsing(fn ($state) => Str::headline($state)),
-                Tables\Columns\TextColumn::make('reference')->copyable(),
-                Tables\Columns\TextColumn::make('status')
-                    ->badge()
-                    ->color(fn (string $state) => match ($state) {
-                        Payment::STATUS_SUCCESSFUL => 'success',
-                        Payment::STATUS_REFUNDED => 'gray',
-                        Payment::STATUS_FAILED => 'danger',
-                        default => 'warning',
-                    }),
-                Tables\Columns\TextColumn::make('amount_kobo')
-                    ->label('Amount')
-                    ->formatStateUsing(fn ($state) => '₦'.number_format($state / 100, 2))
-                    ->sortable(),
+                Tables\Columns\Layout\Split::make([
+                    Tables\Columns\Layout\Stack::make([
+                        Tables\Columns\TextColumn::make('order.order_number')->label('Order')->weight('bold'),
+                        Tables\Columns\TextColumn::make('created_at')->label('Date')->dateTime('d M Y, H:i')->sortable()->color('gray')->size('sm'),
+                    ]),
+                    Tables\Columns\Layout\Stack::make([
+                        Tables\Columns\TextColumn::make('gateway')->formatStateUsing(fn ($state) => Str::headline($state)),
+                        Tables\Columns\TextColumn::make('reference')->copyable()->color('gray')->size('sm'),
+                    ]),
+                    Tables\Columns\Layout\Stack::make([
+                        Tables\Columns\TextColumn::make('status')
+                            ->badge()
+                            ->color(fn (string $state) => match ($state) {
+                                Payment::STATUS_SUCCESSFUL => 'success',
+                                Payment::STATUS_REFUNDED => 'gray',
+                                Payment::STATUS_FAILED => 'danger',
+                                default => 'warning',
+                            }),
+                        Tables\Columns\TextColumn::make('amount_kobo')
+                            ->label('Amount')
+                            ->formatStateUsing(fn ($state) => '₦'.number_format($state / 100, 2))
+                            ->sortable()
+                            ->weight('bold'),
+                    ])->alignEnd(),
+                ])->from('md'),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([

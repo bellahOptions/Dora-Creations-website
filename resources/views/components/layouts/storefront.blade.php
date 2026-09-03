@@ -86,7 +86,11 @@
                         <x-dropdown align="right" width="52">
                             <x-slot name="trigger">
                                 <button class="text-ink-700 transition hover:text-brand-500" aria-label="Account menu">
-                                    <x-heroicon-o-user class="h-6 w-6" />
+                                    @if (auth()->user()->avatarUrl())
+                                        <img src="{{ auth()->user()->avatarUrl() }}" alt="{{ auth()->user()->name }}" class="h-7 w-7 rounded-full object-cover">
+                                    @else
+                                        <x-heroicon-o-user class="h-6 w-6" />
+                                    @endif
                                 </button>
                             </x-slot>
                             <x-slot name="content">

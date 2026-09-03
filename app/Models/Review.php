@@ -49,7 +49,7 @@ class Review extends Model
 
         return str_starts_with($this->screenshot_path, 'http')
             ? $this->screenshot_path
-            : Storage::disk('public')->url($this->screenshot_path);
+            : Storage::disk(config('filesystems.image_disk'))->url($this->screenshot_path);
     }
 
     public function product(): BelongsTo

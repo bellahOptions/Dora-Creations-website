@@ -26,6 +26,12 @@ class UserResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
+            Forms\Components\FileUpload::make('avatar_path')
+                ->label('Avatar')
+                ->avatar()
+                ->directory('avatars')
+                ->disk(config('filesystems.image_disk'))
+                ->columnSpanFull(),
             Forms\Components\TextInput::make('name')->required()->maxLength(255),
             Forms\Components\TextInput::make('email')->disabled()->dehydrated(false),
             Forms\Components\TextInput::make('phone')->tel()->maxLength(20),
@@ -37,15 +43,24 @@ class UserResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('email')->searchable(),
-                Tables\Columns\TextColumn::make('phone')->toggleable(),
-                Tables\Columns\IconColumn::make('is_admin')->boolean()->label('Admin'),
-                Tables\Columns\TextColumn::make('status')
-                    ->badge()
-                    ->color(fn (string $state) => $state === User::STATUS_SUSPENDED ? 'danger' : 'success'),
-                Tables\Columns\TextColumn::make('orders_count')->counts('orders')->label('Orders'),
-                Tables\Columns\TextColumn::make('created_at')->label('Joined')->date()->sortable(),
+                Tables\Columns\Layout\Split::make([
+                    Tables\Columns\ImageColumn::make('avatar_path')->disk(config('filesystems.image_disk'))->circular()->label('Avatar')->grow(false),
+                    Tables\Columns\Layout\Stack::make([
+                        Tables\Columns\TextColumn::make('name')->searchable()->sortable()->weight('bold'),
+                        Tables\Columns\TextColumn::make('email')->searchable()->color('gray')->size('sm'),
+                        Tables\Columns\TextColumn::make('phone')->toggleable()->color('gray')->size('sm'),
+                    ]),
+                    Tables\Columns\Layout\Stack::make([
+                        Tables\Columns\TextColumn::make('status')
+                            ->badge()
+                            ->color(fn (string $state) => $state === User::STATUS_SUSPENDED ? 'danger' : 'success'),
+                        Tables\Columns\IconColumn::make('is_admin')->boolean()->label('Admin'),
+                    ]),
+                    Tables\Columns\Layout\Stack::make([
+                        Tables\Columns\TextColumn::make('orders_count')->counts('orders')->label('Orders'),
+                        Tables\Columns\TextColumn::make('created_at')->label('Joined')->date()->sortable()->color('gray')->size('sm'),
+                    ])->alignEnd(),
+                ])->from('md'),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([

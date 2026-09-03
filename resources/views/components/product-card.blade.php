@@ -14,9 +14,13 @@
             <span class="absolute left-3 top-3 rounded-full bg-brand-500 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-paper">
                 Sale
             </span>
+        @elseif ($product->is_preorder)
+            <span class="absolute left-3 top-3 rounded-full bg-ink-900 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-paper">
+                Pre-order
+            </span>
         @endif
 
-        @if (! $product->isInStock())
+        @if (! $product->canPurchase())
             <span class="absolute inset-0 flex items-center justify-center bg-ink-900/60 text-xs font-semibold uppercase tracking-wide text-paper">
                 Sold out
             </span>

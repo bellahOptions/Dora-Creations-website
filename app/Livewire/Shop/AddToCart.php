@@ -72,6 +72,16 @@ class AddToCart extends Component
         return $this->product->isInStock();
     }
 
+    /**
+     * Whether the current selection can be purchased — real stock, or the
+     * whole product is open for pre-order (which bypasses per-variant
+     * stock too, since the admin has explicitly opened it up for sale).
+     */
+    public function getCanPurchaseProperty(): bool
+    {
+        return $this->product->is_preorder || $this->inStock;
+    }
+
     public function increment(): void
     {
         $this->quantity++;
@@ -92,7 +102,7 @@ class AddToCart extends Component
             return;
         }
 
-        if (! $this->inStock) {
+        if (! $this->canPurchase) {
             $this->addError('stock', 'This item is currently out of stock.');
 
             return;

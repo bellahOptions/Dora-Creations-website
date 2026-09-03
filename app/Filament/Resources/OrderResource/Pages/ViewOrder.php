@@ -130,9 +130,12 @@ class ViewOrder extends ViewRecord
                             Infolist\TextEntry::make('quantity'),
                             Infolist\TextEntry::make('unit_price_kobo')->label('Unit price')->formatStateUsing(fn ($state) => '₦'.number_format($state / 100, 2)),
                             Infolist\TextEntry::make('line_total_kobo')->label('Line total')->formatStateUsing(fn ($state) => '₦'.number_format($state / 100, 2)),
+                            Infolist\IconEntry::make('is_preorder')->label('Pre-order')->boolean(),
                         ])
-                        ->columns(5),
+                        ->columns(6),
                     Infolist\TextEntry::make('subtotal_kobo')->label('Subtotal')->formatStateUsing(fn ($state) => '₦'.number_format($state / 100, 2)),
+                    Infolist\TextEntry::make('discount_kobo')->label('Discount')->visible(fn (Order $record) => $record->discount_kobo > 0)
+                        ->formatStateUsing(fn ($state, Order $record) => '-₦'.number_format($state / 100, 2).($record->discount_code ? " ({$record->discount_code})" : '')),
                     Infolist\TextEntry::make('shipping_kobo')->label('Shipping')->formatStateUsing(fn ($state) => $state === 0 ? 'Free' : '₦'.number_format($state / 100, 2)),
                     Infolist\TextEntry::make('total_kobo')->label('Total')->formatStateUsing(fn ($state) => '₦'.number_format($state / 100, 2))->weight('bold'),
                 ])->columns(3),

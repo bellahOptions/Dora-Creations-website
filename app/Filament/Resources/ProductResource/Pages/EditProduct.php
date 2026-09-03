@@ -16,4 +16,9 @@ class EditProduct extends EditRecord
             Actions\DeleteAction::make(),
         ];
     }
+
+    public function getMaxContentWidth(): ?string
+    {
+        return 'full';
+    }
 }

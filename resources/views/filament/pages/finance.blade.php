@@ -16,6 +16,15 @@
         @endforeach
     </div>
 
+    <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div class="lg:col-span-2">
+            @livewire(\App\Filament\Widgets\RevenueChart::class)
+        </div>
+        <div>
+            @livewire(\App\Filament\Widgets\GatewaySplitChart::class)
+        </div>
+    </div>
+
     <div class="mt-6">
         {{ $this->table }}
     </div>

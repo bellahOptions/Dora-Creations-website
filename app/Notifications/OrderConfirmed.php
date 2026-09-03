@@ -23,10 +23,6 @@ class OrderConfirmed extends Notification implements ShouldQueue
     {
         return (new MailMessage)
             ->subject("Order {$this->order->order_number} confirmed — Dora Creations")
-            ->greeting('Thank you for your order!')
-            ->line("We've received payment for order {$this->order->order_number}.")
-            ->line('Total: '.$this->order->formattedTotal())
-            ->action('Track your order', route('order-tracking.show', $this->order->public_token))
-            ->line('We\'ll let you know as soon as it ships.');
+            ->markdown('mail.orders.confirmed', ['order' => $this->order]);
     }
 }

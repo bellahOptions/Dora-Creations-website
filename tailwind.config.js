@@ -13,8 +13,9 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['"Inter"', ...defaultTheme.fontFamily.sans],
-                display: ['"Archivo Black"', ...defaultTheme.fontFamily.sans],
+                sans: ['"DM Sans"', ...defaultTheme.fontFamily.sans],
+                display: ['"DM Serif Display"', ...defaultTheme.fontFamily.serif],
+                mono: ['"DM Mono"', ...defaultTheme.fontFamily.mono],
             },
             colors: {
                 ink: {

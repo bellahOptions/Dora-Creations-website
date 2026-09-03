@@ -10,6 +10,7 @@ use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
 use Filament\Widgets;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -36,6 +37,19 @@ class AdminPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::hex('#000000'),
             ])
+            ->renderHook(
+                PanelsRenderHook::HEAD_END,
+                // The mobile sidebar drawer (.fi-sidebar, z-30) renders above the
+                // topbar (.fi-topbar, z-20), so its own logo visually covers the
+                // topbar's open/close toggle button — it's still clickable via the
+                // dimmed backdrop, but the button itself becomes invisible, which
+                // reads as "the menu won't collapse". A z-index on the button alone
+                // can't win here — it only competes within .fi-topbar's own
+                // stacking context, which is still behind the sidebar's. The
+                // topbar itself has to outrank the sidebar for the button inside
+                // it to actually render on top.
+                fn (): string => '<style>.fi-topbar{z-index:40!important}</style>',
+            )
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([

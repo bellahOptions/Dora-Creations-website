@@ -30,6 +30,9 @@
             <div>
                 <p class="text-xs font-semibold uppercase tracking-wide text-brand-600">Order {{ $order->order_number }}</p>
                 <h1 class="mt-1 font-display text-2xl uppercase sm:text-3xl">{{ $order->statusLabel() }}</h1>
+                @if ($order->hasPreorderItems())
+                    <p class="mt-2 text-sm text-ink-500">This order includes pre-order items — they'll ship once available.</p>
+                @endif
             </div>
 
             <div x-data="{
@@ -87,7 +90,12 @@
                                 onerror="this.onerror=null;this.src='{{ asset('placeholder.svg') }}';"
                                 class="h-16 w-14 rounded-lg object-cover">
                             <div class="flex-1">
-                                <p class="font-semibold">{{ $item->product_name }}</p>
+                                <p class="font-semibold">
+                                    {{ $item->product_name }}
+                                    @if ($item->is_preorder)
+                                        <span class="ml-1 rounded-full bg-ink-900 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-paper">Pre-order</span>
+                                    @endif
+                                </p>
                                 @if ($item->variant_label)
                                     <p class="text-sm text-ink-400">{{ $item->variant_label }}</p>
                                 @endif
@@ -124,9 +132,12 @@
                 <div class="rounded-2xl border border-ink-100 bg-paper-soft p-6">
                     <h2 class="font-display text-sm uppercase">Receipt</h2>
                     <dl class="mt-3 space-y-2 text-sm">
-                        <div class="flex justify-between"><dt class="text-ink-500">Subtotal</dt><dd>{{ \App\Support\Money::ngn($order->subtotal_kobo) }}</dd></div>
-                        <div class="flex justify-between"><dt class="text-ink-500">Shipping</dt><dd>{{ $order->shipping_kobo === 0 ? 'Free' : \App\Support\Money::ngn($order->shipping_kobo) }}</dd></div>
-                        <div class="flex justify-between border-t border-ink-200 pt-2 font-semibold"><dt>Total</dt><dd>{{ $order->formattedTotal() }}</dd></div>
+                        <div class="flex justify-between"><dt class="text-ink-500">Subtotal</dt><dd class="font-mono">{{ \App\Support\Money::ngn($order->subtotal_kobo) }}</dd></div>
+                        @if ($order->discount_kobo > 0)
+                            <div class="flex justify-between"><dt class="text-ink-500">Discount {{ $order->discount_code ? "({$order->discount_code})" : '' }}</dt><dd class="font-mono">−{{ $order->formattedDiscount() }}</dd></div>
+                        @endif
+                        <div class="flex justify-between"><dt class="text-ink-500">Shipping</dt><dd class="font-mono">{{ $order->shipping_kobo === 0 ? 'Free' : \App\Support\Money::ngn($order->shipping_kobo) }}</dd></div>
+                        <div class="flex justify-between border-t border-ink-200 pt-2 font-semibold"><dt>Total</dt><dd class="font-mono">{{ $order->formattedTotal() }}</dd></div>
                     </dl>
                     @if ($order->payment_gateway)
                         <p class="mt-3 text-xs text-ink-400">Paid via {{ \Illuminate\Support\Str::headline($order->payment_gateway) }}</p>

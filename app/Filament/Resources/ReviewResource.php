@@ -51,7 +51,7 @@ class ReviewResource extends Resource
                     ->image()
                     ->maxSize(5120)
                     ->directory('reviews')
-                    ->disk('public')
+                    ->disk(config('filesystems.image_disk'))
                     ->columnSpanFull(),
                 Forms\Components\Toggle::make('is_approved')
                     ->label('Approved (visible on the storefront)')
@@ -64,17 +64,26 @@ class ReviewResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\ImageColumn::make('screenshot_path')->disk('public')->label('Screenshot'),
-                Tables\Columns\TextColumn::make('product.name')->label('Product')->searchable()->limit(30),
-                Tables\Columns\TextColumn::make('reviewer')
-                    ->label('Reviewer')
-                    ->state(fn (Review $record) => $record->displayName()),
-                Tables\Columns\IconColumn::make('is_verified_purchase')->boolean()->label('Verified'),
-                Tables\Columns\TextColumn::make('rating')->formatStateUsing(fn ($state) => str_repeat('★', $state).str_repeat('☆', 5 - $state)),
-                Tables\Columns\TextColumn::make('title')->limit(30)->placeholder('—'),
-                Tables\Columns\TextColumn::make('body')->limit(50)->wrap(),
-                Tables\Columns\IconColumn::make('is_approved')->boolean()->label('Approved'),
-                Tables\Columns\TextColumn::make('created_at')->date()->sortable(),
+                Tables\Columns\Layout\Split::make([
+                    Tables\Columns\ImageColumn::make('screenshot_path')->disk(config('filesystems.image_disk'))->label('Screenshot')->grow(false),
+                    Tables\Columns\Layout\Stack::make([
+                        Tables\Columns\TextColumn::make('product.name')->label('Product')->searchable()->limit(30)->weight('bold'),
+                        Tables\Columns\TextColumn::make('reviewer')
+                            ->label('Reviewer')
+                            ->state(fn (Review $record) => $record->displayName())
+                            ->color('gray')->size('sm'),
+                        Tables\Columns\TextColumn::make('rating')->formatStateUsing(fn ($state) => str_repeat('★', $state).str_repeat('☆', 5 - $state)),
+                    ]),
+                    Tables\Columns\Layout\Stack::make([
+                        Tables\Columns\TextColumn::make('title')->limit(30)->placeholder('—')->weight('bold'),
+                        Tables\Columns\TextColumn::make('body')->limit(50)->wrap()->color('gray')->size('sm'),
+                    ]),
+                    Tables\Columns\Layout\Stack::make([
+                        Tables\Columns\IconColumn::make('is_verified_purchase')->boolean()->label('Verified'),
+                        Tables\Columns\IconColumn::make('is_approved')->boolean()->label('Approved'),
+                        Tables\Columns\TextColumn::make('created_at')->date()->sortable()->color('gray')->size('sm'),
+                    ])->alignEnd(),
+                ])->from('md'),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([

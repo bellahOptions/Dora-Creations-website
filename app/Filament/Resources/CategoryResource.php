@@ -41,7 +41,7 @@ class CategoryResource extends Resource
                     ->image()
                     ->maxSize(5120)
                     ->directory('categories')
-                    ->disk('public')
+                    ->disk(config('filesystems.image_disk'))
                     ->columnSpanFull(),
                 Forms\Components\TextInput::make('sort_order')
                     ->numeric()
@@ -56,12 +56,18 @@ class CategoryResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\ImageColumn::make('image_path')->disk('public')->label('Image'),
-                Tables\Columns\TextColumn::make('name')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('slug')->searchable(),
-                Tables\Columns\TextColumn::make('products_count')->counts('products')->label('Products'),
-                Tables\Columns\IconColumn::make('is_active')->boolean(),
-                Tables\Columns\TextColumn::make('sort_order')->sortable(),
+                Tables\Columns\Layout\Split::make([
+                    Tables\Columns\ImageColumn::make('image_path')->disk(config('filesystems.image_disk'))->label('Image')->grow(false),
+                    Tables\Columns\Layout\Stack::make([
+                        Tables\Columns\TextColumn::make('name')->searchable()->sortable()->weight('bold'),
+                        Tables\Columns\TextColumn::make('slug')->searchable()->color('gray')->size('sm'),
+                    ]),
+                    Tables\Columns\Layout\Stack::make([
+                        Tables\Columns\TextColumn::make('products_count')->counts('products')->label('Products'),
+                        Tables\Columns\TextColumn::make('sort_order')->sortable()->color('gray')->size('sm'),
+                    ])->alignEnd(),
+                    Tables\Columns\IconColumn::make('is_active')->boolean(),
+                ])->from('md'),
             ])
             ->defaultSort('sort_order')
             ->filters([

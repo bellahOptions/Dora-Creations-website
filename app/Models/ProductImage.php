@@ -24,6 +24,6 @@ class ProductImage extends Model
     {
         return str_starts_with($this->path, 'http')
             ? $this->path
-            : Storage::disk('public')->url($this->path);
+            : Storage::disk(config('filesystems.image_disk'))->url($this->path);
     }
 }

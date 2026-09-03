@@ -45,6 +45,6 @@ class Slide extends Model
     {
         return str_starts_with($this->image_path, 'http')
             ? $this->image_path
-            : Storage::disk('public')->url($this->image_path);
+            : Storage::disk(config('filesystems.image_disk'))->url($this->image_path);
     }
 }

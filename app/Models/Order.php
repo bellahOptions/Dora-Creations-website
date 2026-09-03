@@ -47,6 +47,8 @@ class Order extends Model
         'status',
         'display_currency',
         'subtotal_kobo',
+        'discount_code',
+        'discount_kobo',
         'shipping_kobo',
         'total_kobo',
         'shipping_full_name',
@@ -146,6 +148,26 @@ class Order extends Model
     public function formattedTotal(): string
     {
         return Money::ngn($this->total_kobo);
+    }
+
+    public function formattedSubtotal(): string
+    {
+        return Money::ngn($this->subtotal_kobo);
+    }
+
+    public function formattedShipping(): string
+    {
+        return $this->shipping_kobo === 0 ? 'Free' : Money::ngn($this->shipping_kobo);
+    }
+
+    public function formattedDiscount(): ?string
+    {
+        return $this->discount_kobo > 0 ? Money::ngn($this->discount_kobo) : null;
+    }
+
+    public function hasPreorderItems(): bool
+    {
+        return $this->items->contains('is_preorder', true);
     }
 
     public function statusLabel(): string

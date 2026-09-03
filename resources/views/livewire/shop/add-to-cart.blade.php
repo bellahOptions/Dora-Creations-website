@@ -37,6 +37,13 @@
         <p class="text-sm text-red-600">{{ $message }}</p>
     @enderror
 
+    @if ($product->is_preorder)
+        <div class="flex items-center gap-2 rounded-lg bg-cream/40 px-4 py-3 text-sm text-ink-700">
+            <x-heroicon-o-clock class="h-5 w-5 flex-shrink-0 text-ink-500" />
+            <span><span class="font-semibold">Pre-order</span> — {{ $product->preorderLabel() }}</span>
+        </div>
+    @endif
+
     <div class="flex items-center gap-4">
         <div class="flex items-center gap-3 rounded-full border border-ink-200 px-3 py-2">
             <button wire:click="decrement" type="button" class="text-ink-500 hover:text-ink-900" aria-label="Decrease quantity">−</button>
@@ -44,11 +51,17 @@
             <button wire:click="increment" type="button" class="text-ink-500 hover:text-ink-900" aria-label="Increase quantity">+</button>
         </div>
 
-        @if ($this->inStock)
+        @if ($this->canPurchase)
             <button wire:click="addToCart" wire:loading.attr="disabled"
                 class="flex-1 rounded-full bg-ink-900 px-8 py-3 text-sm font-semibold uppercase tracking-wide text-paper transition hover:bg-brand-500 disabled:opacity-60">
                 <span wire:loading.remove wire:target="addToCart">
-                    {{ $justAdded ? 'Added ✓' : 'Add to cart' }}
+                    @if ($justAdded)
+                        Added ✓
+                    @elseif ($product->is_preorder && ! $this->inStock)
+                        Pre-order now
+                    @else
+                        Add to cart
+                    @endif
                 </span>
                 <span wire:loading wire:target="addToCart">Adding…</span>
             </button>

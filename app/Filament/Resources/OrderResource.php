@@ -23,24 +23,33 @@ class OrderResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('order_number')->label('Order')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('customerName')->label('Customer')->getStateUsing(fn (Order $record) => $record->customerName()),
-                Tables\Columns\TextColumn::make('customerEmail')->label('Email')->getStateUsing(fn (Order $record) => $record->customerEmail())->toggleable(),
-                Tables\Columns\TextColumn::make('status')
-                    ->badge()
-                    ->formatStateUsing(fn (Order $record) => $record->statusLabel())
-                    ->color(fn (string $state) => match ($state) {
-                        Order::STATUS_DELIVERED => 'success',
-                        Order::STATUS_REJECTED_REFUNDED => 'danger',
-                        Order::STATUS_PENDING_PAYMENT => 'gray',
-                        default => 'warning',
-                    }),
-                Tables\Columns\TextColumn::make('total_kobo')
-                    ->label('Total')
-                    ->formatStateUsing(fn ($state) => '₦'.number_format($state / 100, 2))
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('payment_gateway')->formatStateUsing(fn ($state) => $state ? Str::headline($state) : '—'),
-                Tables\Columns\TextColumn::make('created_at')->label('Placed')->dateTime('d M Y, H:i')->sortable(),
+                Tables\Columns\Layout\Split::make([
+                    Tables\Columns\Layout\Stack::make([
+                        Tables\Columns\TextColumn::make('order_number')->label('Order')->searchable()->sortable()->weight('bold'),
+                        Tables\Columns\TextColumn::make('customerName')->label('Customer')->getStateUsing(fn (Order $record) => $record->customerName())->color('gray')->size('sm'),
+                        Tables\Columns\TextColumn::make('customerEmail')->label('Email')->getStateUsing(fn (Order $record) => $record->customerEmail())->toggleable()->color('gray')->size('sm'),
+                    ]),
+                    Tables\Columns\Layout\Stack::make([
+                        Tables\Columns\TextColumn::make('status')
+                            ->badge()
+                            ->formatStateUsing(fn (Order $record) => $record->statusLabel())
+                            ->color(fn (string $state) => match ($state) {
+                                Order::STATUS_DELIVERED => 'success',
+                                Order::STATUS_REJECTED_REFUNDED => 'danger',
+                                Order::STATUS_PENDING_PAYMENT => 'gray',
+                                default => 'warning',
+                            }),
+                        Tables\Columns\TextColumn::make('payment_gateway')->formatStateUsing(fn ($state) => $state ? Str::headline($state) : '—')->color('gray')->size('sm'),
+                    ]),
+                    Tables\Columns\Layout\Stack::make([
+                        Tables\Columns\TextColumn::make('total_kobo')
+                            ->label('Total')
+                            ->formatStateUsing(fn ($state) => '₦'.number_format($state / 100, 2))
+                            ->sortable()
+                            ->weight('bold'),
+                        Tables\Columns\TextColumn::make('created_at')->label('Placed')->dateTime('d M Y, H:i')->sortable()->color('gray')->size('sm'),
+                    ])->alignEnd(),
+                ])->from('md'),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([

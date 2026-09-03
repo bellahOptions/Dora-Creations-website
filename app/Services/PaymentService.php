@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Contracts\PaymentGateway;
+use App\Models\DiscountCode;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Notifications\OrderConfirmed;
@@ -71,6 +72,10 @@ class PaymentService
             ]);
 
             $order->recordStatus(Order::STATUS_PROCESSING, 'Payment confirmed via '.$gateway->label().'.');
+
+            if ($order->discount_code) {
+                DiscountCode::where('code', $order->discount_code)->first()?->incrementUsage();
+            }
 
             if ($order->user) {
                 $order->user->notify(new OrderConfirmed($order));

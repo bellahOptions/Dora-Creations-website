@@ -31,7 +31,7 @@ class SlideResource extends Resource
                 ->image()
                 ->maxSize(5120)
                 ->directory('slides')
-                ->disk('public')
+                ->disk(config('filesystems.image_disk'))
                 ->required()
                 ->columnSpanFull(),
             Forms\Components\TextInput::make('cta_label')->label('Button label')->maxLength(255),
@@ -45,10 +45,14 @@ class SlideResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\ImageColumn::make('image_path')->disk('public'),
-                Tables\Columns\TextColumn::make('headline')->searchable(),
-                Tables\Columns\TextColumn::make('sort_order')->sortable(),
-                Tables\Columns\IconColumn::make('is_active')->boolean(),
+                Tables\Columns\Layout\Split::make([
+                    Tables\Columns\ImageColumn::make('image_path')->disk(config('filesystems.image_disk'))->grow(false),
+                    Tables\Columns\Layout\Stack::make([
+                        Tables\Columns\TextColumn::make('headline')->searchable()->weight('bold'),
+                        Tables\Columns\TextColumn::make('sort_order')->sortable()->color('gray')->size('sm'),
+                    ]),
+                    Tables\Columns\IconColumn::make('is_active')->boolean(),
+                ])->from('md'),
             ])
             ->defaultSort('sort_order')
             ->actions([

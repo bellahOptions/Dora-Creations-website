@@ -5,14 +5,16 @@ namespace App\Models;
 use App\Models\Concerns\HasUuid;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasAvatar;
 use Filament\Panel;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 
-class User extends Authenticatable implements FilamentUser, MustVerifyEmail
+class User extends Authenticatable implements FilamentUser, HasAvatar, MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, HasUuid, Notifiable;
@@ -30,6 +32,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         'name',
         'email',
         'phone',
+        'avatar_path',
         'password',
         'is_admin',
         'status',
@@ -101,5 +104,24 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     public function canAccessPanel(Panel $panel): bool
     {
         return $this->is_admin && ! $this->isSuspended() && $this->hasVerifiedEmail();
+    }
+
+    public function avatarUrl(): ?string
+    {
+        if (! $this->avatar_path) {
+            return null;
+        }
+
+        return str_starts_with($this->avatar_path, 'http')
+            ? $this->avatar_path
+            : Storage::disk(config('filesystems.image_disk'))->url($this->avatar_path);
+    }
+
+    /**
+     * Powers the avatar shown in the Filament admin panel's own top bar.
+     */
+    public function getFilamentAvatarUrl(): ?string
+    {
+        return $this->avatarUrl();
     }
 }

@@ -84,7 +84,12 @@
             </div>
 
             <div>
-                <p class="text-xs font-semibold uppercase tracking-wide text-brand-600">{{ $product->category?->name }}</p>
+                <div class="flex items-center gap-2">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-brand-600">{{ $product->category?->name }}</p>
+                    @if ($product->is_preorder)
+                        <span class="rounded-full bg-ink-900 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-paper">Pre-order</span>
+                    @endif
+                </div>
                 <h1 class="mt-2 font-display text-3xl uppercase sm:text-4xl">{{ $product->name }}</h1>
 
                 <div class="mt-4 flex items-center gap-3">

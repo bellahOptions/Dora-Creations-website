@@ -33,6 +33,9 @@ class Product extends Model
         'has_variants',
         'is_published',
         'is_featured',
+        'is_preorder',
+        'preorder_release_date',
+        'preorder_note',
         'meta_title',
         'meta_description',
     ];
@@ -43,6 +46,8 @@ class Product extends Model
             'is_published' => 'boolean',
             'is_featured' => 'boolean',
             'has_variants' => 'boolean',
+            'is_preorder' => 'boolean',
+            'preorder_release_date' => 'date',
         ];
     }
 
@@ -76,7 +81,7 @@ class Product extends Model
         if ($this->featured_image_path) {
             return str_starts_with($this->featured_image_path, 'http')
                 ? $this->featured_image_path
-                : Storage::disk('public')->url($this->featured_image_path);
+                : Storage::disk(config('filesystems.image_disk'))->url($this->featured_image_path);
         }
 
         return $this->images->first()?->url();
@@ -163,6 +168,29 @@ class Product extends Model
         }
 
         return $this->stock_quantity > 0;
+    }
+
+    /**
+     * Whether this product can be bought right now — either it has real
+     * stock, or an admin has explicitly opened it up for pre-order (in
+     * which case stock, including per-variant stock, doesn't gate a sale).
+     */
+    public function canPurchase(): bool
+    {
+        return $this->is_preorder || $this->isInStock();
+    }
+
+    public function preorderLabel(): string
+    {
+        if ($this->preorder_note) {
+            return $this->preorder_note;
+        }
+
+        if ($this->preorder_release_date) {
+            return 'Ships '.$this->preorder_release_date->format('M j, Y');
+        }
+
+        return 'Ships when available';
     }
 
     public function averageRating(): float

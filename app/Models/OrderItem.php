@@ -17,8 +17,16 @@ class OrderItem extends Model
         'variant_label',
         'unit_price_kobo',
         'quantity',
+        'is_preorder',
         'line_total_kobo',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'is_preorder' => 'boolean',
+        ];
+    }
 
     public function order(): BelongsTo
     {

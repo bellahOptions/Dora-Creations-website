@@ -17,6 +17,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Image Upload Disk
+    |--------------------------------------------------------------------------
+    |
+    | Every user avatar and product/category/slide/review image is written
+    | through this disk. It resolves to Cloudinary automatically once
+    | credentials are set, and quietly falls back to local "public" storage
+    | otherwise — so the app keeps working in local dev with no Cloudinary
+    | account configured.
+    |
+    */
+
+    'image_disk' => env('CLOUDINARY_CLOUD_NAME') ? 'cloudinary' : 'public',
+
+    /*
+    |--------------------------------------------------------------------------
     | Filesystem Disks
     |--------------------------------------------------------------------------
     |
@@ -58,6 +73,14 @@ return [
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
             'throw' => false,
             'report' => false,
+        ],
+
+        'cloudinary' => [
+            'driver' => 'cloudinary',
+            'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
+            'api_key' => env('CLOUDINARY_API_KEY'),
+            'api_secret' => env('CLOUDINARY_API_SECRET'),
+            'folder' => env('CLOUDINARY_FOLDER', 'dora-creations'),
         ],
 
     ],
