@@ -21,7 +21,7 @@
                         <span class="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide
                             {{ match(true) {
                                 $order->status === \App\Models\Order::STATUS_DELIVERED => 'bg-forest-100 text-forest-700',
-                                $order->status === \App\Models\Order::STATUS_REJECTED_REFUNDED => 'bg-red-100 text-red-700',
+                                in_array($order->status, [\App\Models\Order::STATUS_REJECTED_REFUNDED, \App\Models\Order::STATUS_PAYMENT_FAILED]) => 'bg-red-100 text-red-700',
                                 $order->status === \App\Models\Order::STATUS_PENDING_PAYMENT => 'bg-ink-100 text-ink-500',
                                 default => 'bg-gold/20 text-ink-700',
                             } }}">

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Storefront;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Services\ActivityLogger;
 use Illuminate\View\View;
 
 class ShopController extends Controller
@@ -13,6 +14,8 @@ class ShopController extends Controller
         abort_unless($product->is_published, 404);
 
         $product->load(['images', 'variants', 'category', 'approvedReviews.user']);
+
+        ActivityLogger::visitor("Viewed \"{$product->name}\".", $product);
 
         $related = Product::query()
             ->published()

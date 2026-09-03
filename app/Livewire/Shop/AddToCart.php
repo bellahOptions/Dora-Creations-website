@@ -4,6 +4,7 @@ namespace App\Livewire\Shop;
 
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Services\ActivityLogger;
 use App\Services\CartService;
 use Livewire\Component;
 
@@ -109,6 +110,11 @@ class AddToCart extends Component
         }
 
         $cartService->addItem($this->product, $this->selectedVariant, $this->quantity);
+
+        ActivityLogger::visitor(
+            "Added \"{$this->product->name}\" to cart (qty {$this->quantity}).",
+            $this->product,
+        );
 
         $this->justAdded = true;
         $this->quantity = 1;

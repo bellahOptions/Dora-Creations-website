@@ -54,13 +54,14 @@ class PaystackGateway implements PaymentGateway
         if (! $response->successful()) {
             Log::warning('Paystack verify request failed', ['reference' => $reference, 'status' => $response->status()]);
 
-            return ['success' => false, 'amount_kobo' => 0, 'currency' => 'NGN', 'raw' => $response->json() ?? []];
+            return ['success' => false, 'checked' => false, 'amount_kobo' => 0, 'currency' => 'NGN', 'raw' => $response->json() ?? []];
         }
 
         $data = $response->json('data', []);
 
         return [
             'success' => ($data['status'] ?? null) === 'success',
+            'checked' => true,
             'amount_kobo' => (int) ($data['amount'] ?? 0),
             'currency' => $data['currency'] ?? 'NGN',
             'raw' => $data,

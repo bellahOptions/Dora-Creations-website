@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\LogsAdminActivity;
 use Database\Factories\CategoryFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,7 +13,7 @@ use Illuminate\Support\Facades\Storage;
 class Category extends Model
 {
     /** @use HasFactory<CategoryFactory> */
-    use HasFactory;
+    use HasFactory, LogsAdminActivity;
 
     protected $fillable = [
         'name',
@@ -54,5 +55,18 @@ class Category extends Model
         return str_starts_with($this->image_path, 'http')
             ? $this->image_path
             : Storage::disk(config('filesystems.image_disk'))->url($this->image_path);
+    }
+
+    public function activityLogName(): string
+    {
+        return $this->name;
+    }
+
+    protected function activityLoggableAttributes(): array
+    {
+        return [
+            'name' => 'Name',
+            'is_active' => 'Active',
+        ];
     }
 }

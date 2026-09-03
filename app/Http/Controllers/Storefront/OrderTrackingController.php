@@ -4,8 +4,11 @@ namespace App\Http\Controllers\Storefront;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Services\ActivityLogger;
+use App\Services\ReceiptPdfService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 class OrderTrackingController extends Controller
@@ -33,6 +36,8 @@ class OrderTrackingController extends Controller
             return back()->withErrors(['order_number' => 'We could not find an order matching those details.']);
         }
 
+        ActivityLogger::visitor("Looked up order {$order->order_number}.", $order);
+
         return redirect()->route('order-tracking.show', $order->public_token);
     }
 
@@ -43,5 +48,12 @@ class OrderTrackingController extends Controller
             ->firstOrFail();
 
         return view('storefront.order-tracking.show', ['order' => $order]);
+    }
+
+    public function receipt(string $token, ReceiptPdfService $receipts): Response
+    {
+        $order = Order::where('public_token', $token)->firstOrFail();
+
+        return $receipts->forOrder($order)->stream($receipts->filename($order));
     }
 }

@@ -160,6 +160,7 @@ class CheckoutTest extends TestCase
 
         $this->assertFalse($result->isPaid());
         $this->assertSame(Payment::STATUS_FAILED, $result->payments()->first()->status);
+        $this->assertSame(Order::STATUS_PAYMENT_FAILED, $result->status);
     }
 
     public function test_confirming_an_already_paid_order_is_idempotent(): void

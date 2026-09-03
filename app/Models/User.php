@@ -3,12 +3,14 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasUuid;
+use App\Models\Concerns\LogsAdminActivity;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasAvatar;
 use Filament\Panel;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -17,7 +19,7 @@ use Illuminate\Support\Facades\Storage;
 class User extends Authenticatable implements FilamentUser, HasAvatar, MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, HasUuid, Notifiable;
+    use HasFactory, HasUuid, LogsAdminActivity, Notifiable;
 
     public const STATUS_ACTIVE = 'active';
 
@@ -86,6 +88,21 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, MustVerif
         return $this->hasMany(Review::class);
     }
 
+    public function wishlists(): HasMany
+    {
+        return $this->hasMany(Wishlist::class);
+    }
+
+    public function wishlistedProducts(): BelongsToMany
+    {
+        return $this->belongsToMany(Product::class, 'wishlists')->withTimestamps();
+    }
+
+    public function hasWishlisted(Product $product): bool
+    {
+        return $this->wishlists()->where('product_id', $product->id)->exists();
+    }
+
     public function isSuspended(): bool
     {
         return $this->status === self::STATUS_SUSPENDED;
@@ -123,5 +140,18 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, MustVerif
     public function getFilamentAvatarUrl(): ?string
     {
         return $this->avatarUrl();
+    }
+
+    public function activityLogName(): string
+    {
+        return $this->name;
+    }
+
+    protected function activityLoggableAttributes(): array
+    {
+        return [
+            'is_admin' => 'Admin access',
+            'status' => 'Status',
+        ];
     }
 }

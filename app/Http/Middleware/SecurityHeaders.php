@@ -50,7 +50,16 @@ class SecurityHeaders
             trim("script-src 'self' 'unsafe-inline' 'unsafe-eval' {$viteDevOrigins}"),
             trim("style-src 'self' 'unsafe-inline' https://fonts.bunny.net {$viteDevOrigins}"),
             trim("font-src 'self' https://fonts.bunny.net data: {$viteDevOrigins}"),
-            "img-src 'self' data: https:",
+            // blob: is needed for the admin panel's own file-upload previews
+            // (the browser renders the selected file locally before it's
+            // actually saved to a disk) — without it, Filament's upload
+            // widgets show a blank thumbnail even on a successful upload.
+            "img-src 'self' data: blob: https:",
+            // Filament's upload widget also processes the file in a Web
+            // Worker created from a blob: URL; without an explicit
+            // worker-src, browsers fall back to script-src (which lacks
+            // blob:) and silently block it.
+            "worker-src 'self' blob:",
             trim("connect-src 'self' {$viteDevOrigins} {$viteDevSockets}"),
             "object-src 'none'",
             "base-uri 'self'",

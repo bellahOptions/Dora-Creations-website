@@ -7,6 +7,7 @@
     $stepKeys = array_keys($steps);
     $currentIndex = array_search($order->status, $stepKeys, true);
     $isRejected = $order->status === \App\Models\Order::STATUS_REJECTED_REFUNDED;
+    $isPaymentFailed = $order->status === \App\Models\Order::STATUS_PAYMENT_FAILED;
 @endphp
 
 <x-layouts.storefront title="Order {{ $order->order_number }}">
@@ -52,15 +53,19 @@
                     <span x-show="!copied">Share delivery update</span>
                     <span x-show="copied" x-cloak>Link copied ✓</span>
                 </button>
-                <button onclick="window.print()" type="button" class="rounded-full bg-ink-900 px-5 py-2 text-xs font-semibold uppercase tracking-wide text-paper transition hover:bg-brand-500">
-                    Print receipt
-                </button>
+                <a href="{{ route('order-tracking.receipt', $order->public_token) }}" target="_blank" class="rounded-full bg-ink-900 px-5 py-2 text-xs font-semibold uppercase tracking-wide text-paper transition hover:bg-brand-500">
+                    Download receipt
+                </a>
             </div>
         </div>
 
         @if ($isRejected)
             <div class="mt-8 rounded-xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
                 This order was rejected / refunded. Contact us if you have questions.
+            </div>
+        @elseif ($isPaymentFailed)
+            <div class="mt-8 rounded-xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
+                We couldn't confirm payment for this order, so it wasn't placed. If you were charged, contact us and we'll sort it out; otherwise, feel free to try again.
             </div>
         @elseif (! $order->isPaid())
             <div class="mt-8 rounded-xl border border-gold/40 bg-gold/10 p-5 text-sm text-ink-700">

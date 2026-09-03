@@ -82,6 +82,10 @@
                 </div>
 
                 @auth
+                    <a href="{{ route('account.wishlist.index') }}" wire:navigate class="hidden text-ink-700 transition hover:text-brand-500 sm:block" aria-label="My wishlist">
+                        <x-heroicon-o-heart class="h-6 w-6" />
+                    </a>
+
                     <div class="hidden sm:block">
                         <x-dropdown align="right" width="52">
                             <x-slot name="trigger">
@@ -99,6 +103,7 @@
                                 </div>
                                 <x-dropdown-link href="{{ route('dashboard') }}" wire:navigate>Account overview</x-dropdown-link>
                                 <x-dropdown-link href="{{ route('account.orders.index') }}" wire:navigate>My orders</x-dropdown-link>
+                                <x-dropdown-link href="{{ route('account.wishlist.index') }}" wire:navigate>Wishlist</x-dropdown-link>
                                 <x-dropdown-link href="{{ route('account.addresses.index') }}" wire:navigate>Addresses</x-dropdown-link>
                                 <x-dropdown-link href="{{ route('account.settings') }}" wire:navigate>Settings</x-dropdown-link>
                                 @if (auth()->user()->canAccessPanel(\Filament\Facades\Filament::getPanel('admin')))
@@ -198,6 +203,11 @@
     </footer>
 
     @livewire('cart.cart-drawer')
+
+    @php($activeAdModal = \App\Models\AdModal::active()->latest()->first())
+    @if ($activeAdModal)
+        <x-ad-modal :modal="$activeAdModal" />
+    @endif
 
     @filamentScripts
     @livewireScripts

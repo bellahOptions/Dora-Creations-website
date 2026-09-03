@@ -23,9 +23,13 @@ interface PaymentGateway
     public function initialize(Order $order, string $callbackUrl): array;
 
     /**
-     * Verify a transaction reference against the gateway's API.
+     * Verify a transaction reference against the gateway's API. "checked"
+     * distinguishes a definitive answer (the gateway responded, and either
+     * confirmed or denied the payment) from an inconclusive one (a network
+     * failure or non-2xx response) — callers should only treat the payment
+     * as failed when checked is true, never on an inconclusive result.
      *
-     * @return array{success: bool, amount_kobo: int, currency: string, raw: array}
+     * @return array{success: bool, checked: bool, amount_kobo: int, currency: string, raw: array}
      */
     public function verify(string $reference): array;
 

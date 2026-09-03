@@ -5,7 +5,11 @@ namespace App\Livewire\Product;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\Review;
+use App\Models\User;
+use App\Notifications\NewReviewSubmitted;
+use App\Services\ActivityLogger;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Component;
 
@@ -71,7 +75,7 @@ class ReviewForm extends Component
             'body' => ['nullable', 'string', 'max:2000'],
         ]);
 
-        Review::create([
+        $review = Review::create([
             'product_id' => $this->product->id,
             'user_id' => Auth::id(),
             'order_item_id' => $orderItem->id,
@@ -81,6 +85,9 @@ class ReviewForm extends Component
             'is_verified_purchase' => true,
             'is_approved' => false,
         ]);
+
+        ActivityLogger::visitor("Submitted a {$this->rating}-star review for \"{$this->product->name}\".", $this->product);
+        Notification::send(User::where('is_admin', true)->get(), new NewReviewSubmitted($review));
 
         $this->submitted = true;
         $this->reset(['title', 'body']);

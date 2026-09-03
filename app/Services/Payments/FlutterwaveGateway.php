@@ -63,13 +63,14 @@ class FlutterwaveGateway implements PaymentGateway
         if (! $response->successful()) {
             Log::warning('Flutterwave verify request failed', ['reference' => $reference, 'status' => $response->status()]);
 
-            return ['success' => false, 'amount_kobo' => 0, 'currency' => 'NGN', 'raw' => $response->json() ?? []];
+            return ['success' => false, 'checked' => false, 'amount_kobo' => 0, 'currency' => 'NGN', 'raw' => $response->json() ?? []];
         }
 
         $data = $response->json('data', []);
 
         return [
             'success' => ($data['status'] ?? null) === 'successful',
+            'checked' => true,
             'amount_kobo' => Money::kobo((float) ($data['amount'] ?? 0)),
             'currency' => $data['currency'] ?? 'NGN',
             'raw' => $data,

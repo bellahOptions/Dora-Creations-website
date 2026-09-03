@@ -58,6 +58,13 @@ class PaymentService
                     'received_kobo' => $result['amount_kobo'],
                 ]);
 
+                // Only mark the order itself failed once the gateway has given us
+                // a definitive answer — a network blip during verification isn't
+                // proof the payment failed, so we leave those for a later retry.
+                if (($result['checked'] ?? false) && $order->status === Order::STATUS_PENDING_PAYMENT) {
+                    $order->recordStatus(Order::STATUS_PAYMENT_FAILED, 'No successful payment confirmed via '.$gateway->label().'.');
+                }
+
                 return $order;
             }
 

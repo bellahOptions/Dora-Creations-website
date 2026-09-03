@@ -7,6 +7,7 @@ use App\Models\DiscountCode;
 use App\Models\Order;
 use App\Models\SiteSetting;
 use App\Models\User;
+use App\Support\Money;
 use Illuminate\Support\Facades\DB;
 
 class OrderService
@@ -77,6 +78,11 @@ class OrderService
             }
 
             $order->statusHistories()->create(['status' => Order::STATUS_PENDING_PAYMENT]);
+
+            ActivityLogger::visitor(
+                ($user?->name ?? $guestEmail ?? 'A guest').' placed order '.$order->order_number.' for '.Money::ngn($order->total_kobo).'.',
+                $order,
+            );
 
             return $order;
         });

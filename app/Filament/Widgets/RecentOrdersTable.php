@@ -28,7 +28,7 @@ class RecentOrdersTable extends BaseWidget
                     ->formatStateUsing(fn (Order $record) => $record->statusLabel())
                     ->color(fn (string $state) => match ($state) {
                         Order::STATUS_DELIVERED => 'success',
-                        Order::STATUS_REJECTED_REFUNDED => 'danger',
+                        Order::STATUS_REJECTED_REFUNDED, Order::STATUS_PAYMENT_FAILED => 'danger',
                         Order::STATUS_PENDING_PAYMENT => 'gray',
                         default => 'warning',
                     }),

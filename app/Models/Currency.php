@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasUuid;
+use App\Models\Concerns\LogsAdminActivity;
 use Database\Factories\CurrencyFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 class Currency extends Model
 {
     /** @use HasFactory<CurrencyFactory> */
-    use HasFactory, HasUuid;
+    use HasFactory, HasUuid, LogsAdminActivity;
 
     protected $fillable = [
         'code',
@@ -53,5 +54,18 @@ class Currency extends Model
     public function format(int $ngnKobo): string
     {
         return $this->symbol.number_format($this->convertFromNgnKobo($ngnKobo), 2);
+    }
+
+    public function activityLogName(): string
+    {
+        return $this->code;
+    }
+
+    protected function activityLoggableAttributes(): array
+    {
+        return [
+            'rate_to_ngn' => 'Exchange rate',
+            'is_active' => 'Active',
+        ];
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\LogsAdminActivity;
 use Database\Factories\ReviewFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,7 +13,7 @@ use Illuminate\Support\Facades\Storage;
 class Review extends Model
 {
     /** @use HasFactory<ReviewFactory> */
-    use HasFactory;
+    use HasFactory, LogsAdminActivity;
 
     protected $fillable = [
         'product_id',
@@ -70,5 +71,17 @@ class Review extends Model
     public function scopeApproved(Builder $query): Builder
     {
         return $query->where('is_approved', true);
+    }
+
+    public function activityLogName(): string
+    {
+        return 'a review for '.($this->product?->name ?? 'a product');
+    }
+
+    protected function activityLoggableAttributes(): array
+    {
+        return [
+            'is_approved' => 'Approved',
+        ];
     }
 }

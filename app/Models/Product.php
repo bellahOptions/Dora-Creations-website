@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasUuid;
+use App\Models\Concerns\LogsAdminActivity;
 use App\Services\CurrencyService;
 use App\Support\Money;
 use Database\Factories\ProductFactory;
@@ -17,7 +18,7 @@ use Illuminate\Support\Str;
 class Product extends Model
 {
     /** @use HasFactory<ProductFactory> */
-    use HasFactory, HasUuid;
+    use HasFactory, HasUuid, LogsAdminActivity;
 
     protected $fillable = [
         'category_id',
@@ -112,6 +113,11 @@ class Product extends Model
         return $this->reviews()->where('is_approved', true);
     }
 
+    public function wishlistedBy(): HasMany
+    {
+        return $this->hasMany(Wishlist::class);
+    }
+
     public function scopePublished(Builder $query): Builder
     {
         return $query->where('is_published', true);
@@ -196,5 +202,27 @@ class Product extends Model
     public function averageRating(): float
     {
         return round($this->approvedReviews()->avg('rating') ?? 0, 1);
+    }
+
+    public function activityLogName(): string
+    {
+        return $this->name;
+    }
+
+    protected function activityLoggableAttributes(): array
+    {
+        return [
+            'name' => 'Name',
+            'price_kobo' => 'Price',
+            'stock_quantity' => 'Stock',
+            'is_published' => 'Published',
+            'is_featured' => 'Featured',
+            'is_preorder' => 'Pre-order',
+        ];
+    }
+
+    protected function activityLogMoneyKeys(): array
+    {
+        return ['price_kobo'];
     }
 }

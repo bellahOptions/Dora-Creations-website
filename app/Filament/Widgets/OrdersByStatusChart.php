@@ -16,6 +16,7 @@ class OrdersByStatusChart extends ChartWidget
     {
         $statuses = [
             Order::STATUS_PENDING_PAYMENT,
+            Order::STATUS_PAYMENT_FAILED,
             Order::STATUS_PROCESSING,
             Order::STATUS_DELIVERY_ONGOING,
             Order::STATUS_DELIVERED,
@@ -32,7 +33,7 @@ class OrdersByStatusChart extends ChartWidget
             'datasets' => [
                 [
                     'data' => collect($statuses)->map(fn ($status) => $counts->get($status, 0))->values(),
-                    'backgroundColor' => ['#A29A89', '#E6934F', '#C9A227', '#1F6F54', '#DC2626', '#725C3A'],
+                    'backgroundColor' => ['#A29A89', '#EF4444', '#E6934F', '#C9A227', '#1F6F54', '#DC2626', '#725C3A'],
                 ],
             ],
             'labels' => collect($statuses)->map(fn ($status) => Str::headline($status))->values(),

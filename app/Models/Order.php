@@ -3,12 +3,18 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasUuid;
+use App\Notifications\NewOrderPlaced;
+use App\Notifications\OrderStatusUpdated;
+use App\Notifications\ReviewRequested;
+use App\Services\ActivityLogger;
 use App\Support\Money;
 use Database\Factories\OrderFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Notifications\Notification as NotificationInstance;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 
 class Order extends Model
@@ -17,6 +23,8 @@ class Order extends Model
     use HasFactory, HasUuid;
 
     public const STATUS_PENDING_PAYMENT = 'pending_payment';
+
+    public const STATUS_PAYMENT_FAILED = 'payment_failed';
 
     public const STATUS_PROCESSING = 'processing';
 
@@ -121,6 +129,8 @@ class Order extends Model
 
     public function recordStatus(string $status, ?string $note = null, ?User $changedBy = null): void
     {
+        $statusChanged = $this->status !== $status;
+
         $this->update(['status' => $status]);
 
         $this->statusHistories()->create([
@@ -128,6 +138,39 @@ class Order extends Model
             'note' => $note,
             'changed_by' => $changedBy?->id,
         ]);
+
+        $label = Str::headline($status);
+
+        if ($changedBy?->is_admin) {
+            ActivityLogger::admin("Set order {$this->order_number} to \"{$label}\".", $this);
+        } else {
+            ActivityLogger::visitor("Order {$this->order_number} moved to \"{$label}\".", $this);
+        }
+
+        // Re-submitting the same status (e.g. an admin adding a note without
+        // actually changing anything) shouldn't re-send emails that already went out.
+        if ($statusChanged) {
+            $this->notifyStatusChange($status);
+        }
+    }
+
+    protected function notifyStatusChange(string $status): void
+    {
+        match ($status) {
+            self::STATUS_DELIVERY_ONGOING, self::STATUS_DELIVERED, self::STATUS_REJECTED_REFUNDED, self::STATUS_PAYMENT_FAILED => $this->notifyCustomer(new OrderStatusUpdated($this)),
+            self::STATUS_REVIEW_REQUESTED => $this->notifyCustomer(new ReviewRequested($this)),
+            self::STATUS_PROCESSING => Notification::send(User::where('is_admin', true)->get(), new NewOrderPlaced($this)),
+            default => null,
+        };
+    }
+
+    protected function notifyCustomer(NotificationInstance $notification): void
+    {
+        if ($this->user) {
+            $this->user->notify($notification);
+        } elseif ($this->guest_email) {
+            Notification::route('mail', $this->guest_email)->notify($notification);
+        }
     }
 
     public function isPaid(): bool
@@ -174,6 +217,7 @@ class Order extends Model
     {
         return match ($this->status) {
             self::STATUS_PENDING_PAYMENT => 'Pending payment',
+            self::STATUS_PAYMENT_FAILED => 'Payment failed',
             self::STATUS_PROCESSING => 'Processing',
             self::STATUS_DELIVERY_ONGOING => 'Delivery ongoing',
             self::STATUS_DELIVERED => 'Delivered',

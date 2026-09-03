@@ -21,6 +21,13 @@ class ViewOrder extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            Actions\Action::make('downloadReceipt')
+                ->label('Download receipt')
+                ->icon('heroicon-o-document-arrow-down')
+                ->color('gray')
+                ->url(fn () => route('order-tracking.receipt', $this->record->public_token))
+                ->openUrlInNewTab(),
+
             Actions\Action::make('updateStatus')
                 ->label('Update status')
                 ->icon('heroicon-o-arrow-path')
@@ -98,7 +105,7 @@ class ViewOrder extends ViewRecord
                     Infolist\TextEntry::make('status')->badge()->formatStateUsing(fn (Order $record) => $record->statusLabel())
                         ->color(fn (string $state) => match ($state) {
                             Order::STATUS_DELIVERED => 'success',
-                            Order::STATUS_REJECTED_REFUNDED => 'danger',
+                            Order::STATUS_REJECTED_REFUNDED, Order::STATUS_PAYMENT_FAILED => 'danger',
                             Order::STATUS_PENDING_PAYMENT => 'gray',
                             default => 'warning',
                         }),

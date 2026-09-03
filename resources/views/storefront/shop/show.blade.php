@@ -114,7 +114,12 @@
                     {!! nl2br(e($product->description)) !!}
                 </div>
 
-                @livewire('shop.add-to-cart', ['product' => $product], key('add-to-cart-'.$product->id))
+                <div class="flex items-start gap-3">
+                    <div class="flex-1">
+                        @livewire('shop.add-to-cart', ['product' => $product], key('add-to-cart-'.$product->id))
+                    </div>
+                    <x-wishlist-button :product="$product" />
+                </div>
 
                 <div class="mt-8 grid grid-cols-2 gap-4 border-t border-ink-100 pt-6 text-xs text-ink-500">
                     <div>

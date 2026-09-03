@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasUuid;
+use App\Models\Concerns\LogsAdminActivity;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
 class DiscountCode extends Model
 {
-    use HasUuid;
+    use HasUuid, LogsAdminActivity;
 
     public const TYPE_PERCENTAGE = 'percentage';
 
@@ -114,5 +115,18 @@ class DiscountCode extends Model
     public function incrementUsage(): void
     {
         $this->increment('used_count');
+    }
+
+    public function activityLogName(): string
+    {
+        return $this->code;
+    }
+
+    protected function activityLoggableAttributes(): array
+    {
+        return [
+            'code' => 'Code',
+            'is_active' => 'Active',
+        ];
     }
 }

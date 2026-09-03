@@ -11,6 +11,7 @@ use App\Http\Controllers\Storefront\HomeController;
 use App\Http\Controllers\Storefront\OrderTrackingController;
 use App\Http\Controllers\Storefront\PageController;
 use App\Http\Controllers\Storefront\ShopController;
+use App\Http\Controllers\Storefront\WishlistController;
 use App\Http\Controllers\LlmsTxtController;
 use App\Http\Controllers\RobotsController;
 use App\Http\Controllers\SitemapController;
@@ -46,12 +47,18 @@ Route::post('/track-order', [OrderTrackingController::class, 'find'])
     ->middleware('throttle:10,1')
     ->name('order-tracking.find');
 Route::get('/track-order/{token}', [OrderTrackingController::class, 'show'])->name('order-tracking.show');
+Route::get('/track-order/{token}/receipt.pdf', [OrderTrackingController::class, 'receipt'])->name('order-tracking.receipt');
 
 Route::middleware(['auth', 'verified'])->prefix('account')->name('account.')->group(function () {
     Route::get('/orders', [AccountOrderController::class, 'index'])->name('orders.index');
     Route::get('/addresses', [AddressController::class, 'index'])->name('addresses.index');
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
+    Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
 });
+
+Route::post('/wishlist/toggle/{product}', [WishlistController::class, 'toggle'])
+    ->middleware(['auth', 'throttle:60,1'])
+    ->name('wishlist.toggle');
 
 // Named "dashboard" (not "account.dashboard") to match Breeze's default post-login redirect target.
 Route::middleware(['auth', 'verified'])->get('/account', [DashboardController::class, 'index'])->name('dashboard');

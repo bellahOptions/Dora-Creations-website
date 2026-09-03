@@ -2,8 +2,12 @@
 
 namespace App\Providers;
 
+use App\Services\ActivityLogger;
 use App\Support\Cloudinary\CloudinaryAdapter;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Filesystem\FilesystemAdapter as LaravelFilesystemAdapter;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
@@ -46,6 +50,20 @@ class AppServiceProvider extends ServiceProvider
             $adapter = new CloudinaryAdapter($config);
 
             return new LaravelFilesystemAdapter(new Flysystem($adapter, $config), $adapter, $config);
+        });
+
+        // Single hook for every login, storefront or admin panel, since both
+        // share the same guard and this event fires from within it either way.
+        Event::listen(Login::class, function (Login $event): void {
+            if ($event->user->is_admin) {
+                ActivityLogger::admin("{$event->user->name} logged in.");
+            } else {
+                ActivityLogger::visitor("{$event->user->name} logged in.", $event->user);
+            }
+        });
+
+        Event::listen(Registered::class, function (Registered $event): void {
+            ActivityLogger::visitor("{$event->user->name} created an account.", $event->user);
         });
     }
 }

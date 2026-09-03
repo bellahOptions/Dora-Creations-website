@@ -35,7 +35,7 @@ class OrderResource extends Resource
                             ->formatStateUsing(fn (Order $record) => $record->statusLabel())
                             ->color(fn (string $state) => match ($state) {
                                 Order::STATUS_DELIVERED => 'success',
-                                Order::STATUS_REJECTED_REFUNDED => 'danger',
+                                Order::STATUS_REJECTED_REFUNDED, Order::STATUS_PAYMENT_FAILED => 'danger',
                                 Order::STATUS_PENDING_PAYMENT => 'gray',
                                 default => 'warning',
                             }),
@@ -55,6 +55,7 @@ class OrderResource extends Resource
             ->filters([
                 Tables\Filters\SelectFilter::make('status')->options([
                     Order::STATUS_PENDING_PAYMENT => 'Pending payment',
+                    Order::STATUS_PAYMENT_FAILED => 'Payment failed',
                     Order::STATUS_PROCESSING => 'Processing',
                     Order::STATUS_DELIVERY_ONGOING => 'Delivery ongoing',
                     Order::STATUS_DELIVERED => 'Delivered',

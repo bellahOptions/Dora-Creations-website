@@ -111,6 +111,22 @@
         </section>
     @endif
 
+    {{-- Recommendations --}}
+    @if ($recommended->isNotEmpty())
+        <section class="container-store py-20">
+            <div class="mb-10 flex items-end justify-between">
+                <h2 class="font-display text-2xl uppercase sm:text-3xl">{{ auth()->check() ? 'Recommended for you' : 'Trending now' }}</h2>
+                <a href="{{ route('shop.index') }}" class="text-sm font-semibold uppercase tracking-wide text-brand-600 hover:underline">Shop all</a>
+            </div>
+
+            <div class="grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-4">
+                @foreach ($recommended as $product)
+                    <x-product-card :product="$product" />
+                @endforeach
+            </div>
+        </section>
+    @endif
+
     {{-- Brand story teaser — subtle nod to design & printing --}}
     <section class="container-store grid grid-cols-1 gap-10 py-20 sm:grid-cols-2 sm:items-center">
         <div x-data x-intersect.once="$el.classList.add('reveal-visible')" class="reveal aspect-[4/3] overflow-hidden rounded-2xl bg-ink-900">
