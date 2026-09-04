@@ -168,7 +168,10 @@ class ProductResource extends Resource
 
                 Forms\Components\Section::make('SEO')->schema([
                     Forms\Components\TextInput::make('meta_title')->maxLength(255),
-                    Forms\Components\TextInput::make('meta_description')->maxLength(255),
+                    Forms\Components\Textarea::make('meta_description')
+                        ->rows(2)
+                        ->maxLength(500)
+                        ->helperText('Aim for around 155-160 characters — search engines truncate longer descriptions.'),
                 ])->columns(2)->collapsed(),
             ]),
         ]);

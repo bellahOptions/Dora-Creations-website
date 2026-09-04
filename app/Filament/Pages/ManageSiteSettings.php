@@ -47,7 +47,11 @@ class ManageSiteSettings extends Page implements HasForms
                 ->schema([
                     Forms\Components\TextInput::make('site_name')->required()->maxLength(255),
                     Forms\Components\TextInput::make('meta_title')->maxLength(255),
-                    Forms\Components\Textarea::make('meta_description')->rows(2)->columnSpanFull(),
+                    Forms\Components\Textarea::make('meta_description')
+                        ->rows(2)
+                        ->maxLength(500)
+                        ->helperText('Aim for around 155-160 characters — search engines truncate longer descriptions.')
+                        ->columnSpanFull(),
                 ])->columns(2),
 
             Forms\Components\Section::make('Contact & social')

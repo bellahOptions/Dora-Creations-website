@@ -26,9 +26,10 @@ use Throwable;
  * Every image on the site (product photos, category/slide art, review
  * screenshots, user avatars) is a plain "image" resource, so resource_type
  * is hardcoded rather than tracked per file. The path given by Flysystem
- * callers is used as the Cloudinary public_id verbatim (extension and all),
- * which keeps read/write/delete/url all trivially reversible without a
- * separate lookup table.
+ * callers maps directly to the Cloudinary public_id (minus its extension,
+ * which Cloudinary tracks separately as the format), which keeps
+ * read/write/delete/url all trivially reversible without a separate
+ * lookup table.
  */
 class CloudinaryAdapter implements FilesystemAdapter
 {
@@ -44,11 +45,28 @@ class CloudinaryAdapter implements FilesystemAdapter
         ]);
     }
 
+    /**
+     * Cloudinary's delivery URLs always append ".<format>" after the public
+     * ID (see getUrl()). If the public ID itself also ends in an extension
+     * (e.g. Flysystem paths like "products/abc123.png"), the two combine
+     * into a mismatched, unreachable URL — the asset uploads fine, but
+     * every storefront request for it 404s. So the extension is stripped
+     * here and reattached separately as the "format" at both upload and
+     * URL-generation time, matching Cloudinary's own public_id convention.
+     */
     private function publicId(string $path): string
     {
         $folder = trim($this->config['folder'] ?? '', '/');
+        $path = preg_replace('/\.[^.\/]+$/', '', ltrim($path, '/'));
 
-        return $folder !== '' ? $folder.'/'.ltrim($path, '/') : ltrim($path, '/');
+        return $folder !== '' ? $folder.'/'.$path : $path;
+    }
+
+    private function format(string $path): ?string
+    {
+        $extension = pathinfo($path, PATHINFO_EXTENSION);
+
+        return $extension !== '' ? $extension : null;
     }
 
     public function fileExists(string $path): bool
@@ -205,6 +223,7 @@ class CloudinaryAdapter implements FilesystemAdapter
         return cloudinary_url($this->publicId($path), [
             'secure' => true,
             'resource_type' => self::RESOURCE_TYPE,
+            'format' => $this->format($path),
         ]);
     }
 }

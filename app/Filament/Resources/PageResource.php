@@ -31,7 +31,11 @@ class PageResource extends Resource
                 ->afterStateUpdated(fn (string $context, $state, Forms\Set $set) => $context === 'create' ? $set('slug', Str::slug($state)) : null),
             Forms\Components\TextInput::make('slug')->required()->maxLength(255)->unique(ignoreRecord: true),
             Forms\Components\RichEditor::make('content')->columnSpanFull(),
-            Forms\Components\TextInput::make('meta_description')->maxLength(255)->columnSpanFull(),
+            Forms\Components\Textarea::make('meta_description')
+                ->rows(2)
+                ->maxLength(500)
+                ->helperText('Aim for around 155-160 characters — search engines truncate longer descriptions.')
+                ->columnSpanFull(),
             Forms\Components\Toggle::make('is_published')->default(true),
         ])->columns(2);
     }
