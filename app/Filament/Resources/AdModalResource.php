@@ -37,6 +37,7 @@ class AdModalResource extends Resource
                     ->maxSize(5120)
                     ->directory('ad-modals')
                     ->disk(config('filesystems.image_disk'))
+                    ->fetchFileInformation(false)
                     ->columnSpanFull(),
                 Forms\Components\TextInput::make('cta_label')
                     ->label('Button label (optional)')

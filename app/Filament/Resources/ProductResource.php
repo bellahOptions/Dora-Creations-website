@@ -76,7 +76,11 @@ class ProductResource extends Resource
                     Forms\Components\TextInput::make('stock_quantity')
                         ->label('Stock quantity')
                         ->numeric()
+                        ->minValue(0)
                         ->default(0)
+                        ->required()
+                        ->disabled(fn (Forms\Get $get) => (bool) $get('has_variants'))
+                        ->dehydrateStateUsing(fn ($state) => $state === null || $state === '' ? 0 : (int) $state)
                         ->helperText('Ignored when variants are enabled; each variant tracks its own stock.'),
                     Forms\Components\Toggle::make('has_variants')
                         ->label('This product has size/color variants')
@@ -135,7 +139,8 @@ class ProductResource extends Resource
                             ->image()
                             ->maxSize(5120)
                             ->directory('products')
-                            ->disk(config('filesystems.image_disk')),
+                            ->disk(config('filesystems.image_disk'))
+                            ->fetchFileInformation(false),
                     ]),
 
                 Forms\Components\Section::make('Gallery images')
@@ -150,6 +155,7 @@ class ProductResource extends Resource
                                     ->maxSize(5120)
                                     ->directory('products')
                                     ->disk(config('filesystems.image_disk'))
+                                    ->fetchFileInformation(false)
                                     ->required(),
                                 Forms\Components\TextInput::make('alt_text')->maxLength(255),
                                 Forms\Components\TextInput::make('sort_order')->numeric()->default(0),

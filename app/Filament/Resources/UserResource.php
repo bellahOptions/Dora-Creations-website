@@ -31,6 +31,7 @@ class UserResource extends Resource
                 ->avatar()
                 ->directory('avatars')
                 ->disk(config('filesystems.image_disk'))
+                ->fetchFileInformation(false)
                 ->columnSpanFull(),
             Forms\Components\TextInput::make('name')->required()->maxLength(255),
             Forms\Components\TextInput::make('email')->disabled()->dehydrated(false),

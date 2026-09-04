@@ -52,6 +52,7 @@ class ReviewResource extends Resource
                     ->maxSize(5120)
                     ->directory('reviews')
                     ->disk(config('filesystems.image_disk'))
+                    ->fetchFileInformation(false)
                     ->columnSpanFull(),
                 Forms\Components\Toggle::make('is_approved')
                     ->label('Approved (visible on the storefront)')

@@ -32,6 +32,7 @@ class SlideResource extends Resource
                 ->maxSize(5120)
                 ->directory('slides')
                 ->disk(config('filesystems.image_disk'))
+                ->fetchFileInformation(false)
                 ->required()
                 ->columnSpanFull(),
             Forms\Components\TextInput::make('cta_label')->label('Button label')->maxLength(255),

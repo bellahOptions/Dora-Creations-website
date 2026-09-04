@@ -42,6 +42,7 @@ class CategoryResource extends Resource
                     ->maxSize(5120)
                     ->directory('categories')
                     ->disk(config('filesystems.image_disk'))
+                    ->fetchFileInformation(false)
                     ->columnSpanFull(),
                 Forms\Components\TextInput::make('sort_order')
                     ->numeric()
