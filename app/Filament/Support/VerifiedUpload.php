@@ -3,59 +3,144 @@
 namespace App\Filament\Support;
 
 use Filament\Forms\Components\BaseFileUpload;
+use Filament\Forms\Components\FileUpload;
 use Filament\Notifications\Notification;
 use Filament\Support\Exceptions\Halt;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Throwable;
 
 /**
- * Wraps a FileUpload field's default save behavior with a reachability
- * check against the disk's public URL. Cloudinary's API can accept an
- * upload (no exception thrown) yet leave the asset unreachable — this
- * catches that case, deletes the orphaned upload, and halts the save
- * (rolling back the whole record) instead of persisting a product,
- * category, slide, etc. with a broken image reference.
+ * Wraps a FileUpload field with fixes on top of Filament's defaults:
+ *
+ * 1. Verifies a Cloudinary upload actually resolved to a reachable URL
+ *    before saving — Cloudinary's API can accept an upload (no exception
+ *    thrown) yet leave the asset unreachable. If that happens, the orphaned
+ *    upload is deleted and the save is halted instead of persisting a
+ *    product, category, slide, etc. with a broken image reference.
+ * 2. Stops already-stored-but-broken references from ever reaching the
+ *    browser. Filament's default file-info lookup was disabled project-wide
+ *    (it called Cloudinary's admin API on every form load, which was slow
+ *    and rate-limited), but that lookup was also what filtered out missing
+ *    files — without it, a broken path gets handed straight to the FilePond
+ *    widget, which fetches it to build a preview and hangs forever with no
+ *    error and no way to remove it. This does a cheap, cached HEAD request
+ *    against the CDN URL instead of the admin API, and simply omits the
+ *    file from the widget's state when it's unreachable, leaving an empty
+ *    (not stuck) upload slot the admin can fill in again.
+ * 3. Actually deletes the file from disk (Cloudinary included) when an
+ *    admin removes it from the widget — Filament does not do this by
+ *    default; removing a file only detaches it from the form's state.
+ * 4. Downscales oversized images client-side (before they're even
+ *    uploaded) so nothing bigger than necessary ever hits storage or the
+ *    storefront — keeping page loads fast. Fields that already configure
+ *    their own resize target (e.g. ->avatar()) are left untouched.
  */
 class VerifiedUpload
 {
+    private const MAX_DIMENSION = '2000';
+
     public static function apply(BaseFileUpload $upload): BaseFileUpload
     {
-        return $upload->saveUploadedFileUsing(static function (BaseFileUpload $component, TemporaryUploadedFile $file) {
-            try {
-                if (! $file->exists()) {
+        if (
+            $upload instanceof FileUpload
+            && blank($upload->getImageResizeTargetWidth())
+            && blank($upload->getImageResizeTargetHeight())
+        ) {
+            $upload
+                ->imageResizeMode('contain')
+                ->imageResizeTargetWidth(static::MAX_DIMENSION)
+                ->imageResizeTargetHeight(static::MAX_DIMENSION)
+                ->imageResizeUpscale(false);
+        }
+
+        $upload
+            ->saveUploadedFileUsing(static function (BaseFileUpload $component, TemporaryUploadedFile $file) {
+                try {
+                    if (! $file->exists()) {
+                        return null;
+                    }
+                } catch (Throwable) {
                     return null;
                 }
-            } catch (Throwable) {
-                return null;
-            }
 
-            $disk = $component->getDisk();
+                $disk = $component->getDisk();
 
-            $path = $file->storePubliclyAs(
-                $component->getDirectory(),
-                $component->getUploadedFileNameForStorage($file),
-                $component->getDiskName(),
-            );
+                $path = $file->storePubliclyAs(
+                    $component->getDirectory(),
+                    $component->getUploadedFileNameForStorage($file),
+                    $component->getDiskName(),
+                );
 
-            if ($component->getDiskName() === 'cloudinary' && ! static::isReachable($disk->url($path))) {
-                try {
-                    $disk->delete($path);
-                } catch (Throwable) {
-                    // Best-effort cleanup — the halt below is what matters.
+                if ($component->getDiskName() === 'cloudinary' && ! static::isReachable($disk->url($path))) {
+                    try {
+                        $disk->delete($path);
+                    } catch (Throwable) {
+                        // Best-effort cleanup — the halt below is what matters.
+                    }
+
+                    static::forgetReachability($path);
+
+                    Notification::make()
+                        ->danger()
+                        ->title('Image upload failed')
+                        ->body('"'.$file->getClientOriginalName().'" was uploaded but could not be verified on Cloudinary. Please try again.')
+                        ->send();
+
+                    throw (new Halt)->rollBackDatabaseTransaction();
                 }
 
-                Notification::make()
-                    ->danger()
-                    ->title('Image upload failed')
-                    ->body('"'.$file->getClientOriginalName().'" was uploaded but could not be verified on Cloudinary. Please try again.')
-                    ->send();
+                return $path;
+            })
+            ->deleteUploadedFileUsing(static function (BaseFileUpload $component, string $file) {
+                try {
+                    $component->getDisk()->delete($file);
+                } catch (Throwable) {
+                    // Best-effort — the reference is being removed from the record either way.
+                }
 
-                throw (new Halt)->rollBackDatabaseTransaction();
-            }
+                static::forgetReachability($file);
+            });
 
-            return $path;
-        });
+        if (! $upload->shouldFetchFileInformation()) {
+            $upload->getUploadedFileUsing(static function (BaseFileUpload $component, string $file, string | array | null $storedFileNames): ?array {
+                $disk = $component->getDisk();
+                $url = $disk->url($file);
+
+                if ($component->getDiskName() === 'cloudinary' && ! static::isCachedReachable($file, $url)) {
+                    return null;
+                }
+
+                return [
+                    'name' => ($component->isMultiple() ? ($storedFileNames[$file] ?? null) : $storedFileNames) ?? basename($file),
+                    'size' => 0,
+                    'type' => null,
+                    'url' => $url,
+                ];
+            });
+        }
+
+        return $upload;
+    }
+
+    private static function isCachedReachable(string $file, string $url): bool
+    {
+        return Cache::remember(
+            static::reachabilityCacheKey($file),
+            now()->addMinutes(30),
+            fn () => static::isReachable($url),
+        );
+    }
+
+    private static function forgetReachability(string $file): void
+    {
+        Cache::forget(static::reachabilityCacheKey($file));
+    }
+
+    private static function reachabilityCacheKey(string $file): string
+    {
+        return 'verified-upload:reachable:'.md5($file);
     }
 
     private static function isReachable(string $url): bool
