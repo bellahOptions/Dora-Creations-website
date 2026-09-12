@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ProductResource\Pages;
+use App\Filament\Support\VerifiedUpload;
 use App\Models\Category;
 use App\Models\Product;
 use Filament\Forms;
@@ -31,7 +32,15 @@ class ProductResource extends Resource
                         ->required()
                         ->maxLength(255)
                         ->live(onBlur: true)
-                        ->afterStateUpdated(fn (string $context, $state, Forms\Set $set) => $context === 'create' ? $set('slug', Str::slug($state)) : null),
+                        ->afterStateUpdated(function (string $context, ?string $state, Forms\Get $get, Forms\Set $set) {
+                            if ($context === 'create') {
+                                $set('slug', Str::slug($state));
+                            }
+
+                            if (blank($get('meta_title'))) {
+                                $set('meta_title', $state);
+                            }
+                        }),
                     Forms\Components\TextInput::make('slug')
                         ->required()
                         ->maxLength(255)
@@ -46,6 +55,12 @@ class ProductResource extends Resource
                         ->helperText('A one- or two-line summary shown on product cards and in search results.')
                         ->rows(2)
                         ->maxLength(300)
+                        ->live(onBlur: true)
+                        ->afterStateUpdated(function (?string $state, Forms\Get $get, Forms\Set $set) {
+                            if (blank($get('meta_description'))) {
+                                $set('meta_description', Str::limit((string) $state, 160));
+                            }
+                        })
                         ->columnSpanFull(),
                     Forms\Components\Textarea::make('description')
                         ->label('Full description')
@@ -134,13 +149,15 @@ class ProductResource extends Resource
                 Forms\Components\Section::make('Featured image')
                     ->description('The primary photo used on product cards, the shop grid, and social previews.')
                     ->schema([
-                        Forms\Components\FileUpload::make('featured_image_path')
-                            ->label('')
-                            ->image()
-                            ->maxSize(5120)
-                            ->directory('products')
-                            ->disk(config('filesystems.image_disk'))
-                            ->fetchFileInformation(false),
+                        VerifiedUpload::apply(
+                            Forms\Components\FileUpload::make('featured_image_path')
+                                ->label('')
+                                ->image()
+                                ->maxSize(5120)
+                                ->directory('products')
+                                ->disk(config('filesystems.image_disk'))
+                                ->fetchFileInformation(false)
+                        ),
                     ]),
 
                 Forms\Components\Section::make('Gallery images')
@@ -150,13 +167,15 @@ class ProductResource extends Resource
                             ->relationship()
                             ->label('')
                             ->schema([
-                                Forms\Components\FileUpload::make('path')
-                                    ->image()
-                                    ->maxSize(5120)
-                                    ->directory('products')
-                                    ->disk(config('filesystems.image_disk'))
-                                    ->fetchFileInformation(false)
-                                    ->required(),
+                                VerifiedUpload::apply(
+                                    Forms\Components\FileUpload::make('path')
+                                        ->image()
+                                        ->maxSize(5120)
+                                        ->directory('products')
+                                        ->disk(config('filesystems.image_disk'))
+                                        ->fetchFileInformation(false)
+                                        ->required()
+                                ),
                                 Forms\Components\TextInput::make('alt_text')->maxLength(255),
                                 Forms\Components\TextInput::make('sort_order')->numeric()->default(0),
                             ])
@@ -166,13 +185,15 @@ class ProductResource extends Resource
                             ->columnSpanFull(),
                     ]),
 
-                Forms\Components\Section::make('SEO')->schema([
-                    Forms\Components\TextInput::make('meta_title')->maxLength(255),
-                    Forms\Components\Textarea::make('meta_description')
-                        ->rows(2)
-                        ->maxLength(500)
-                        ->helperText('Aim for around 155-160 characters — search engines truncate longer descriptions.'),
-                ])->columns(2)->collapsed(),
+                Forms\Components\Section::make('SEO')
+                    ->description('Auto-filled from the name and short description above — edit either field here to override.')
+                    ->schema([
+                        Forms\Components\TextInput::make('meta_title')->maxLength(255),
+                        Forms\Components\Textarea::make('meta_description')
+                            ->rows(2)
+                            ->maxLength(500)
+                            ->helperText('Aim for around 155-160 characters — search engines truncate longer descriptions.'),
+                    ])->columns(2)->collapsed(),
             ]),
         ]);
     }

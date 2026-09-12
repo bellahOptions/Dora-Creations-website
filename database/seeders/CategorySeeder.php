@@ -26,7 +26,7 @@ class CategorySeeder extends Seeder
                 $category + [
                     'slug' => $slug,
                     'is_active' => true,
-                    'image_path' => PlaceholderImage::store('public', "categories/{$slug}.svg", $category['name'], '#25221C'),
+                    'image_path' => PlaceholderImage::store(config('filesystems.image_disk'), "categories/{$slug}.svg", $category['name'], '#25221C'),
                 ]
             );
         }

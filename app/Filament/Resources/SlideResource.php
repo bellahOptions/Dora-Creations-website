@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\SlideResource\Pages;
+use App\Filament\Support\VerifiedUpload;
 use App\Models\Slide;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -27,14 +28,16 @@ class SlideResource extends Resource
         return $form->schema([
             Forms\Components\TextInput::make('headline')->required()->maxLength(255),
             Forms\Components\TextInput::make('subheadline')->maxLength(255),
-            Forms\Components\FileUpload::make('image_path')
-                ->image()
-                ->maxSize(5120)
-                ->directory('slides')
-                ->disk(config('filesystems.image_disk'))
-                ->fetchFileInformation(false)
-                ->required()
-                ->columnSpanFull(),
+            VerifiedUpload::apply(
+                Forms\Components\FileUpload::make('image_path')
+                    ->image()
+                    ->maxSize(5120)
+                    ->directory('slides')
+                    ->disk(config('filesystems.image_disk'))
+                    ->fetchFileInformation(false)
+                    ->required()
+                    ->columnSpanFull()
+            ),
             Forms\Components\TextInput::make('cta_label')->label('Button label')->maxLength(255),
             Forms\Components\TextInput::make('cta_url')->label('Button link')->maxLength(255),
             Forms\Components\TextInput::make('sort_order')->numeric()->default(0),

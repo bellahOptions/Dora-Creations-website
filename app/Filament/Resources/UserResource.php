@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
+use App\Filament\Support\VerifiedUpload;
 use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -26,13 +27,15 @@ class UserResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\FileUpload::make('avatar_path')
-                ->label('Avatar')
-                ->avatar()
-                ->directory('avatars')
-                ->disk(config('filesystems.image_disk'))
-                ->fetchFileInformation(false)
-                ->columnSpanFull(),
+            VerifiedUpload::apply(
+                Forms\Components\FileUpload::make('avatar_path')
+                    ->label('Avatar')
+                    ->avatar()
+                    ->directory('avatars')
+                    ->disk(config('filesystems.image_disk'))
+                    ->fetchFileInformation(false)
+                    ->columnSpanFull()
+            ),
             Forms\Components\TextInput::make('name')->required()->maxLength(255),
             Forms\Components\TextInput::make('email')->disabled()->dehydrated(false),
             Forms\Components\TextInput::make('phone')->tel()->maxLength(20),

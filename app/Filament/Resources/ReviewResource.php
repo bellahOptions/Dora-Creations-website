@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ReviewResource\Pages;
+use App\Filament\Support\VerifiedUpload;
 use App\Models\Product;
 use App\Models\Review;
 use Filament\Forms;
@@ -45,15 +46,17 @@ class ReviewResource extends Resource
                     ->required(),
                 Forms\Components\TextInput::make('title')->maxLength(255),
                 Forms\Components\Textarea::make('body')->rows(4)->columnSpanFull(),
-                Forms\Components\FileUpload::make('screenshot_path')
-                    ->label('Screenshot')
-                    ->helperText('A screenshot of a testimonial from Instagram, WhatsApp, etc., shown alongside the review.')
-                    ->image()
-                    ->maxSize(5120)
-                    ->directory('reviews')
-                    ->disk(config('filesystems.image_disk'))
-                    ->fetchFileInformation(false)
-                    ->columnSpanFull(),
+                VerifiedUpload::apply(
+                    Forms\Components\FileUpload::make('screenshot_path')
+                        ->label('Screenshot')
+                        ->helperText('A screenshot of a testimonial from Instagram, WhatsApp, etc., shown alongside the review.')
+                        ->image()
+                        ->maxSize(5120)
+                        ->directory('reviews')
+                        ->disk(config('filesystems.image_disk'))
+                        ->fetchFileInformation(false)
+                        ->columnSpanFull()
+                ),
                 Forms\Components\Toggle::make('is_approved')
                     ->label('Approved (visible on the storefront)')
                     ->default(true),

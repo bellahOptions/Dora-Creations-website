@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\CategoryResource\Pages;
+use App\Filament\Support\VerifiedUpload;
 use App\Models\Category;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -37,13 +38,15 @@ class CategoryResource extends Resource
                 Forms\Components\Textarea::make('description')
                     ->rows(3)
                     ->columnSpanFull(),
-                Forms\Components\FileUpload::make('image_path')
-                    ->image()
-                    ->maxSize(5120)
-                    ->directory('categories')
-                    ->disk(config('filesystems.image_disk'))
-                    ->fetchFileInformation(false)
-                    ->columnSpanFull(),
+                VerifiedUpload::apply(
+                    Forms\Components\FileUpload::make('image_path')
+                        ->image()
+                        ->maxSize(5120)
+                        ->directory('categories')
+                        ->disk(config('filesystems.image_disk'))
+                        ->fetchFileInformation(false)
+                        ->columnSpanFull()
+                ),
                 Forms\Components\TextInput::make('sort_order')
                     ->numeric()
                     ->default(0),

@@ -62,7 +62,7 @@ class ProductSeeder extends Seeder
             $product->images()->delete();
             foreach (range(1, 2) as $n) {
                 $product->images()->create([
-                    'path' => PlaceholderImage::store('public', "products/{$slug}-{$n}.svg", $data['name'], $background),
+                    'path' => PlaceholderImage::store(config('filesystems.image_disk'), "products/{$slug}-{$n}.svg", $data['name'], $background),
                     'alt_text' => $data['name'],
                     'sort_order' => $n,
                 ]);

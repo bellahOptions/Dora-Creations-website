@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\AdModalResource\Pages;
+use App\Filament\Support\VerifiedUpload;
 use App\Models\AdModal;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -31,14 +32,16 @@ class AdModalResource extends Resource
                     ->maxLength(255),
                 Forms\Components\RichEditor::make('body')
                     ->columnSpanFull(),
-                Forms\Components\FileUpload::make('image_path')
-                    ->label('Image (optional)')
-                    ->image()
-                    ->maxSize(5120)
-                    ->directory('ad-modals')
-                    ->disk(config('filesystems.image_disk'))
-                    ->fetchFileInformation(false)
-                    ->columnSpanFull(),
+                VerifiedUpload::apply(
+                    Forms\Components\FileUpload::make('image_path')
+                        ->label('Image (optional)')
+                        ->image()
+                        ->maxSize(5120)
+                        ->directory('ad-modals')
+                        ->disk(config('filesystems.image_disk'))
+                        ->fetchFileInformation(false)
+                        ->columnSpanFull()
+                ),
                 Forms\Components\TextInput::make('cta_label')
                     ->label('Button label (optional)')
                     ->maxLength(255),
