@@ -3,7 +3,6 @@
 namespace App\Filament\Support;
 
 use Filament\Forms\Components\BaseFileUpload;
-use Filament\Forms\Components\FileUpload;
 use Filament\Notifications\Notification;
 use Filament\Support\Exceptions\Halt;
 use Illuminate\Support\Facades\Cache;
@@ -32,29 +31,11 @@ use Throwable;
  * 3. Actually deletes the file from disk (Cloudinary included) when an
  *    admin removes it from the widget — Filament does not do this by
  *    default; removing a file only detaches it from the form's state.
- * 4. Downscales oversized images client-side (before they're even
- *    uploaded) so nothing bigger than necessary ever hits storage or the
- *    storefront — keeping page loads fast. Fields that already configure
- *    their own resize target (e.g. ->avatar()) are left untouched.
  */
 class VerifiedUpload
 {
-    private const MAX_DIMENSION = '2000';
-
     public static function apply(BaseFileUpload $upload): BaseFileUpload
     {
-        if (
-            $upload instanceof FileUpload
-            && blank($upload->getImageResizeTargetWidth())
-            && blank($upload->getImageResizeTargetHeight())
-        ) {
-            $upload
-                ->imageResizeMode('contain')
-                ->imageResizeTargetWidth(static::MAX_DIMENSION)
-                ->imageResizeTargetHeight(static::MAX_DIMENSION)
-                ->imageResizeUpscale(false);
-        }
-
         $upload
             ->saveUploadedFileUsing(static function (BaseFileUpload $component, TemporaryUploadedFile $file) {
                 try {
@@ -129,7 +110,7 @@ class VerifiedUpload
         return Cache::remember(
             static::reachabilityCacheKey($file),
             now()->addMinutes(30),
-            fn () => static::isReachable($url),
+            fn () => static::isDisplayable($url),
         );
     }
 
@@ -143,12 +124,34 @@ class VerifiedUpload
         return 'verified-upload:reachable:'.md5($file);
     }
 
+    /**
+     * Used at save time to actively verify a just-uploaded file, where a
+     * failure to connect is itself meaningful (the upload likely didn't
+     * really land) — so any exception here is treated as "not reachable".
+     */
     private static function isReachable(string $url): bool
     {
         try {
             return Http::timeout(10)->head($url)->successful();
         } catch (Throwable) {
             return false;
+        }
+    }
+
+    /**
+     * Used when deciding whether to keep showing an already-stored file.
+     * A confirmed 4xx/5xx response means the asset is genuinely gone, so
+     * we hide it. A network error or timeout doesn't tell us that — it
+     * just means we couldn't check right now — so it fails open and the
+     * file is still shown, rather than making a good image vanish because
+     * of a transient blip talking to Cloudinary.
+     */
+    private static function isDisplayable(string $url): bool
+    {
+        try {
+            return Http::timeout(10)->head($url)->successful();
+        } catch (Throwable) {
+            return true;
         }
     }
 }
