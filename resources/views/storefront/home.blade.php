@@ -80,13 +80,10 @@
             @foreach ($categories as $category)
                 <a href="{{ route('categories.show', $category->slug) }}"
                     x-data x-intersect.once="$el.classList.add('reveal-visible')"
-                    class="reveal group relative aspect-square overflow-hidden rounded-2xl bg-ink-100"
+                    class="reveal group relative flex aspect-square flex-col items-center justify-center gap-3 overflow-hidden rounded-2xl bg-ink-900 transition duration-300 hover:bg-ink-800"
                     style="transition-delay: {{ $loop->index * 80 }}ms">
-                    <img src="{{ $category->imageUrl() ?? asset('placeholder.svg') }}" alt="{{ $category->name }}"
-                        onerror="this.onerror=null;this.src='{{ asset('placeholder.svg') }}';"
-                        class="h-full w-full object-cover transition duration-500 group-hover:scale-110">
-                    <div class="absolute inset-0 bg-gradient-to-t from-ink-900/70 via-transparent to-transparent"></div>
-                    <p class="absolute bottom-4 left-4 font-display text-sm uppercase tracking-wide text-paper sm:text-base">{{ $category->name }}</p>
+                    <x-category-icon :category="$category" class="h-10 w-10 text-paper/80 transition duration-300 group-hover:scale-110 sm:h-12 sm:w-12" />
+                    <p class="font-display text-sm uppercase tracking-wide text-paper sm:text-base">{{ $category->name }}</p>
                 </a>
             @endforeach
         </div>
