@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasUuid;
+use App\Models\Concerns\InvalidatesStorefrontCache;
 use App\Models\Concerns\LogsAdminActivity;
 use App\Services\CurrencyService;
 use App\Support\Money;
@@ -18,7 +19,7 @@ use Illuminate\Support\Str;
 class Product extends Model
 {
     /** @use HasFactory<ProductFactory> */
-    use HasFactory, HasUuid, LogsAdminActivity;
+    use HasFactory, HasUuid, InvalidatesStorefrontCache, LogsAdminActivity;
 
     protected $fillable = [
         'category_id',

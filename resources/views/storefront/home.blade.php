@@ -2,8 +2,8 @@
     {{-- Hero slideshow --}}
     @php
         $heroPanels = [
-            ['panel' => 'bg-ink-900', 'eyebrow' => 'text-paper/60', 'heading' => 'text-paper', 'sub' => 'text-paper/75', 'cta' => 'bg-paper text-ink-900 hover:bg-cream'],
-            ['panel' => 'bg-cream', 'eyebrow' => 'text-ink-900/50', 'heading' => 'text-ink-900', 'sub' => 'text-ink-700', 'cta' => 'bg-ink-900 text-paper hover:bg-ink-700'],
+            ['panel' => 'bg-ink-900', 'heading' => 'text-paper', 'sub' => 'text-paper/75', 'cta' => 'bg-paper text-ink-900 hover:bg-cream'],
+            ['panel' => 'bg-cream', 'heading' => 'text-ink-900', 'sub' => 'text-ink-700', 'cta' => 'bg-ink-900 text-paper hover:bg-ink-700'],
         ];
     @endphp
     <section class="relative">
@@ -25,8 +25,7 @@
                             <div class="grid h-full grid-cols-1 lg:grid-cols-2">
                                 <div class="flex items-center {{ $panel['panel'] }} px-6 py-16 sm:px-12 lg:px-16">
                                     <div class="max-w-md">
-                                        <p class="text-xs font-semibold uppercase tracking-[0.3em] {{ $panel['eyebrow'] }}">Dora Creations</p>
-                                        <p class="mt-4 font-display text-4xl uppercase leading-[0.95] {{ $panel['heading'] }} sm:text-5xl lg:text-6xl">
+                                        <p class="font-display text-4xl uppercase leading-[0.95] {{ $panel['heading'] }} sm:text-5xl lg:text-6xl">
                                             {{ $slide->headline }}
                                         </p>
                                         @if ($slide->subheadline)

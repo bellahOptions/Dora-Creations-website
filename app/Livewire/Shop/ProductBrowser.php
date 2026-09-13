@@ -4,6 +4,7 @@ namespace App\Livewire\Shop;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Services\StorefrontCache;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
@@ -67,30 +68,36 @@ class ProductBrowser extends Component
 
     protected function products(): LengthAwarePaginator
     {
-        $query = Product::query()
-            ->published()
-            ->with(['images', 'category'])
-            ->when($this->category, fn ($q) => $q->whereHas('category', fn ($c) => $c->where('slug', $this->category)))
-            ->when($this->q, fn ($q) => $q->where('name', 'like', '%'.$this->q.'%'))
-            ->when($this->size, fn ($q) => $q->whereHas('variants', fn ($v) => $v->where('size', $this->size)))
-            ->when($this->color, fn ($q) => $q->whereHas('variants', fn ($v) => $v->where('color', $this->color)))
-            ->when($this->priceRange(), fn ($q, $range) => $q->whereBetween('price_kobo', $range));
+        $key = 'shop:products:'.md5(serialize([
+            $this->category, $this->q, $this->size, $this->color, $this->price, $this->sort, $this->getPage(),
+        ]));
 
-        $query = match ($this->sort) {
-            'price_asc' => $query->orderBy('price_kobo'),
-            'price_desc' => $query->orderByDesc('price_kobo'),
-            'name' => $query->orderBy('name'),
-            default => $query->latest(),
-        };
+        return StorefrontCache::remember($key, function () {
+            $query = Product::query()
+                ->published()
+                ->with(['images', 'category'])
+                ->when($this->category, fn ($q) => $q->whereHas('category', fn ($c) => $c->where('slug', $this->category)))
+                ->when($this->q, fn ($q) => $q->where('name', 'like', '%'.$this->q.'%'))
+                ->when($this->size, fn ($q) => $q->whereHas('variants', fn ($v) => $v->where('size', $this->size)))
+                ->when($this->color, fn ($q) => $q->whereHas('variants', fn ($v) => $v->where('color', $this->color)))
+                ->when($this->priceRange(), fn ($q, $range) => $q->whereBetween('price_kobo', $range));
 
-        return $query->paginate(12);
+            $query = match ($this->sort) {
+                'price_asc' => $query->orderBy('price_kobo'),
+                'price_desc' => $query->orderByDesc('price_kobo'),
+                'name' => $query->orderBy('name'),
+                default => $query->latest(),
+            };
+
+            return $query->paginate(12);
+        });
     }
 
     public function render()
     {
         return view('livewire.shop.product-browser', [
             'products' => $this->products(),
-            'categories' => Category::active()->orderBy('sort_order')->get(),
+            'categories' => StorefrontCache::remember('shop:categories:active', fn () => Category::active()->orderBy('sort_order')->get()),
             'sizes' => ['S', 'M', 'L', 'XL'],
             'colors' => ['Black', 'White', 'Sand', 'Forest', 'Ochre'],
         ]);

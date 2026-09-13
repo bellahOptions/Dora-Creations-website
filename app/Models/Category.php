@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\InvalidatesStorefrontCache;
 use App\Models\Concerns\LogsAdminActivity;
 use Database\Factories\CategoryFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -13,7 +14,7 @@ use Illuminate\Support\Facades\Storage;
 class Category extends Model
 {
     /** @use HasFactory<CategoryFactory> */
-    use HasFactory, LogsAdminActivity;
+    use HasFactory, InvalidatesStorefrontCache, LogsAdminActivity;
 
     protected $fillable = [
         'name',

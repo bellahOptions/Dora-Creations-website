@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\Slide;
 use App\Services\RecommendationService;
+use App\Services\StorefrontCache;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
@@ -16,9 +17,18 @@ class HomeController extends Controller
     {
         return view('storefront.home', [
             'slides' => Slide::active()->get(),
-            'featuredProducts' => Product::published()->featured()->with('images')->latest()->limit(8)->get(),
-            'newArrivals' => Product::published()->with('images')->latest()->limit(4)->get(),
-            'categories' => Category::active()->orderBy('sort_order')->get(),
+            'featuredProducts' => StorefrontCache::remember(
+                'home:featured-products',
+                fn () => Product::published()->featured()->with('images')->latest()->limit(8)->get(),
+            ),
+            'newArrivals' => StorefrontCache::remember(
+                'home:new-arrivals',
+                fn () => Product::published()->with('images')->latest()->limit(4)->get(),
+            ),
+            'categories' => StorefrontCache::remember(
+                'home:categories',
+                fn () => Category::active()->orderBy('sort_order')->get(),
+            ),
             'recommended' => $recommendations->forUser(Auth::user(), 8),
         ]);
     }

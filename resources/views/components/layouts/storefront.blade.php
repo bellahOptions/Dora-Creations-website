@@ -46,17 +46,17 @@
 <body class="flex min-h-screen flex-col bg-paper text-ink-900">
 
     <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded focus:bg-ink-900 focus:px-4 focus:py-2 focus:text-paper">
-        Skip to content
+        {{ __('Skip to content') }}
     </a>
 
     <div class="overflow-hidden bg-ink-900 py-2 text-paper">
         <div class="flex animate-marquee whitespace-nowrap text-xs font-semibold uppercase tracking-[0.2em]">
             @for ($i = 0; $i < 2; $i++)
-                <span class="mx-6">Handmade in Nigeria</span>
+                <span class="mx-6">{{ __('Premium Tees') }}</span>
                 <span class="mx-6 text-brand-400">&#9670;</span>
-                <span class="mx-6">Free naija-wide delivery on orders over &#8358;50,000</span>
+                <span class="mx-6">{{ __('Free naija-wide delivery on orders over :amount', ['amount' => '₦50,000']) }}</span>
                 <span class="mx-6 text-brand-400">&#9670;</span>
-                <span class="mx-6">Pay with Paystack or Flutterwave</span>
+                <span class="mx-6">{{ __('Enjoy a smooth delivery process') }}</span>
                 <span class="mx-6 text-brand-400">&#9670;</span>
             @endfor
         </div>
@@ -69,27 +69,28 @@
             </a>
 
             <nav class="hidden items-center gap-8 text-sm font-semibold uppercase tracking-wide lg:flex">
-                <a href="{{ route('shop.index') }}" class="transition hover:text-brand-500 {{ request()->routeIs('shop.*') ? 'text-brand-500' : '' }}">Shop</a>
-                <a href="{{ route('categories.index') }}" class="transition hover:text-brand-500 {{ request()->routeIs('categories.*') ? 'text-brand-500' : '' }}">Collections</a>
-                <a href="{{ route('pages.show', 'about') }}" class="transition hover:text-brand-500">About</a>
-                <a href="{{ route('pages.show', 'design-and-printing') }}" class="transition hover:text-brand-500">Design &amp; Print</a>
-                <a href="{{ route('pages.show', 'contact') }}" class="transition hover:text-brand-500">Contact</a>
+                <a href="{{ route('shop.index') }}" class="transition hover:text-brand-500 {{ request()->routeIs('shop.*') ? 'text-brand-500' : '' }}">{{ __('Shop') }}</a>
+                <a href="{{ route('categories.index') }}" class="transition hover:text-brand-500 {{ request()->routeIs('categories.*') ? 'text-brand-500' : '' }}">{{ __('Collections') }}</a>
+                <a href="{{ route('pages.show', 'about') }}" class="transition hover:text-brand-500">{{ __('About') }}</a>
+                <a href="{{ route('pages.show', 'design-and-printing') }}" class="transition hover:text-brand-500">{{ __('Design & Print') }}</a>
+                <a href="{{ route('pages.show', 'contact') }}" class="transition hover:text-brand-500">{{ __('Contact') }}</a>
             </nav>
 
             <div class="flex items-center gap-4">
-                <div class="hidden sm:block">
+                <div class="hidden items-center gap-4 sm:flex">
+                    @livewire('language-switcher')
                     @livewire('currency-switcher')
                 </div>
 
                 @auth
-                    <a href="{{ route('account.wishlist.index') }}" wire:navigate class="hidden text-ink-700 transition hover:text-brand-500 sm:block" aria-label="My wishlist">
+                    <a href="{{ route('account.wishlist.index') }}" wire:navigate class="hidden text-ink-700 transition hover:text-brand-500 sm:block" aria-label="{{ __('My wishlist') }}">
                         <x-heroicon-o-heart class="h-6 w-6" />
                     </a>
 
                     <div class="hidden sm:block">
                         <x-dropdown align="right" width="52">
                             <x-slot name="trigger">
-                                <button class="text-ink-700 transition hover:text-brand-500" aria-label="Account menu">
+                                <button class="text-ink-700 transition hover:text-brand-500" aria-label="{{ __('Account menu') }}">
                                     @if (auth()->user()->avatarUrl())
                                         <img src="{{ auth()->user()->avatarUrl() }}" alt="{{ auth()->user()->name }}" class="h-7 w-7 rounded-full object-cover">
                                     @else
@@ -99,34 +100,34 @@
                             </x-slot>
                             <x-slot name="content">
                                 <div class="border-b border-ink-100 px-4 py-2 text-xs text-ink-400">
-                                    Signed in as <span class="font-semibold text-ink-700">{{ auth()->user()->name }}</span>
+                                    {{ __('Signed in as') }} <span class="font-semibold text-ink-700">{{ auth()->user()->name }}</span>
                                 </div>
-                                <x-dropdown-link href="{{ route('dashboard') }}" wire:navigate>Account overview</x-dropdown-link>
-                                <x-dropdown-link href="{{ route('account.orders.index') }}" wire:navigate>My orders</x-dropdown-link>
-                                <x-dropdown-link href="{{ route('account.wishlist.index') }}" wire:navigate>Wishlist</x-dropdown-link>
-                                <x-dropdown-link href="{{ route('account.addresses.index') }}" wire:navigate>Addresses</x-dropdown-link>
-                                <x-dropdown-link href="{{ route('account.settings') }}" wire:navigate>Settings</x-dropdown-link>
+                                <x-dropdown-link href="{{ route('dashboard') }}" wire:navigate>{{ __('Account overview') }}</x-dropdown-link>
+                                <x-dropdown-link href="{{ route('account.orders.index') }}" wire:navigate>{{ __('My orders') }}</x-dropdown-link>
+                                <x-dropdown-link href="{{ route('account.wishlist.index') }}" wire:navigate>{{ __('Wishlist') }}</x-dropdown-link>
+                                <x-dropdown-link href="{{ route('account.addresses.index') }}" wire:navigate>{{ __('Addresses') }}</x-dropdown-link>
+                                <x-dropdown-link href="{{ route('account.settings') }}" wire:navigate>{{ __('Settings') }}</x-dropdown-link>
                                 @if (auth()->user()->canAccessPanel(\Filament\Facades\Filament::getPanel('admin')))
-                                    <x-dropdown-link href="{{ route('filament.admin.pages.dashboard') }}">Admin dashboard</x-dropdown-link>
+                                    <x-dropdown-link href="{{ route('filament.admin.pages.dashboard') }}">{{ __('Admin dashboard') }}</x-dropdown-link>
                                 @endif
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
                                     <x-dropdown-link href="{{ route('logout') }}" @click.prevent="$el.closest('form').submit();">
-                                        Log out
+                                        {{ __('Log out') }}
                                     </x-dropdown-link>
                                 </form>
                             </x-slot>
                         </x-dropdown>
                     </div>
                 @else
-                    <a href="{{ route('login') }}" class="hidden text-ink-700 transition hover:text-brand-500 sm:block" aria-label="Login">
+                    <a href="{{ route('login') }}" class="hidden text-ink-700 transition hover:text-brand-500 sm:block" aria-label="{{ __('Login') }}">
                         <x-heroicon-o-user class="h-6 w-6" />
                     </a>
                 @endauth
 
                 @livewire('cart.cart-indicator')
 
-                <button @click="mobileOpen = !mobileOpen" class="text-ink-700 lg:hidden" aria-label="Toggle menu">
+                <button @click="mobileOpen = !mobileOpen" class="text-ink-700 lg:hidden" aria-label="{{ __('Toggle menu') }}">
                     <x-heroicon-o-bars-3 class="h-7 w-7" x-show="!mobileOpen" />
                     <x-heroicon-o-x-mark class="h-7 w-7" x-show="mobileOpen" x-cloak />
                 </button>
@@ -135,22 +136,23 @@
 
         <div x-show="mobileOpen" x-collapse x-cloak class="border-t border-ink-100 bg-paper lg:hidden">
             <nav class="container-store flex flex-col gap-1 py-4 text-sm font-semibold uppercase tracking-wide">
-                <a href="{{ route('shop.index') }}" class="rounded px-2 py-2 hover:bg-ink-50">Shop</a>
-                <a href="{{ route('categories.index') }}" class="rounded px-2 py-2 hover:bg-ink-50">Collections</a>
-                <a href="{{ route('pages.show', 'about') }}" class="rounded px-2 py-2 hover:bg-ink-50">About</a>
-                <a href="{{ route('pages.show', 'design-and-printing') }}" class="rounded px-2 py-2 hover:bg-ink-50">Design &amp; Print</a>
-                <a href="{{ route('pages.show', 'contact') }}" class="rounded px-2 py-2 hover:bg-ink-50">Contact</a>
+                <a href="{{ route('shop.index') }}" class="rounded px-2 py-2 hover:bg-ink-50">{{ __('Shop') }}</a>
+                <a href="{{ route('categories.index') }}" class="rounded px-2 py-2 hover:bg-ink-50">{{ __('Collections') }}</a>
+                <a href="{{ route('pages.show', 'about') }}" class="rounded px-2 py-2 hover:bg-ink-50">{{ __('About') }}</a>
+                <a href="{{ route('pages.show', 'design-and-printing') }}" class="rounded px-2 py-2 hover:bg-ink-50">{{ __('Design & Print') }}</a>
+                <a href="{{ route('pages.show', 'contact') }}" class="rounded px-2 py-2 hover:bg-ink-50">{{ __('Contact') }}</a>
                 <div class="mt-2 flex items-center justify-between px-2">
+                    @livewire('language-switcher')
                     @livewire('currency-switcher')
                     @auth
-                        <a href="{{ route('dashboard') }}" class="normal-case tracking-normal text-brand-600">My account</a>
+                        <a href="{{ route('dashboard') }}" class="normal-case tracking-normal text-brand-600">{{ __('My account') }}</a>
                     @else
-                        <a href="{{ route('login') }}" class="normal-case tracking-normal text-brand-600">Login</a>
+                        <a href="{{ route('login') }}" class="normal-case tracking-normal text-brand-600">{{ __('Login') }}</a>
                     @endauth
                 </div>
                 @auth
                     @if (auth()->user()->canAccessPanel(\Filament\Facades\Filament::getPanel('admin')))
-                        <a href="{{ route('filament.admin.pages.dashboard') }}" class="mt-2 rounded px-2 py-2 hover:bg-ink-50">Admin dashboard</a>
+                        <a href="{{ route('filament.admin.pages.dashboard') }}" class="mt-2 rounded px-2 py-2 hover:bg-ink-50">{{ __('Admin dashboard') }}</a>
                     @endif
                 @endauth
             </nav>
@@ -166,39 +168,38 @@
             <div>
                 <img src="{{ asset('logo-on-dark-background.svg') }}" alt="Dora Creations" class="h-8 w-auto">
                 <p class="mt-4 max-w-xs text-sm text-ink-200">
-                    Nigerian-made fashion, tees, tote bags and more, designed and produced by
-                    Dora herself, with a creative design &amp; printing studio behind the scenes.
+                    {{ __('Nigerian-made fashion, tees, tote bags and more, designed and produced by Dora herself, with a creative design & printing studio behind the scenes.') }}
                 </p>
             </div>
 
             <div>
-                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-ink-300">Shop</p>
+                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-ink-300">{{ __('Shop') }}</p>
                 <ul class="mt-4 space-y-2 text-sm text-ink-200">
-                    <li><a href="{{ route('shop.index') }}" class="hover:text-brand-400">All products</a></li>
-                    <li><a href="{{ route('categories.index') }}" class="hover:text-brand-400">Collections</a></li>
-                    <li><a href="{{ route('cart.index') }}" class="hover:text-brand-400">Cart</a></li>
-                    <li><a href="{{ route('order-tracking.lookup') }}" class="hover:text-brand-400">Track an order</a></li>
+                    <li><a href="{{ route('shop.index') }}" class="hover:text-brand-400">{{ __('All products') }}</a></li>
+                    <li><a href="{{ route('categories.index') }}" class="hover:text-brand-400">{{ __('Collections') }}</a></li>
+                    <li><a href="{{ route('cart.index') }}" class="hover:text-brand-400">{{ __('Cart') }}</a></li>
+                    <li><a href="{{ route('order-tracking.lookup') }}" class="hover:text-brand-400">{{ __('Track an order') }}</a></li>
                 </ul>
             </div>
 
             <div>
-                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-ink-300">The brand</p>
+                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-ink-300">{{ __('The brand') }}</p>
                 <ul class="mt-4 space-y-2 text-sm text-ink-200">
-                    <li><a href="{{ route('pages.show', 'about') }}" class="hover:text-brand-400">About Dora</a></li>
-                    <li><a href="{{ route('pages.show', 'design-and-printing') }}" class="hover:text-brand-400">Design &amp; Printing</a></li>
-                    <li><a href="{{ route('pages.show', 'shipping-and-returns') }}" class="hover:text-brand-400">Shipping &amp; returns</a></li>
-                    <li><a href="{{ route('pages.show', 'contact') }}" class="hover:text-brand-400">Contact</a></li>
+                    <li><a href="{{ route('pages.show', 'about') }}" class="hover:text-brand-400">{{ __('About Dora') }}</a></li>
+                    <li><a href="{{ route('pages.show', 'design-and-printing') }}" class="hover:text-brand-400">{{ __('Design & Printing') }}</a></li>
+                    <li><a href="{{ route('pages.show', 'shipping-and-returns') }}" class="hover:text-brand-400">{{ __('Shipping & returns') }}</a></li>
+                    <li><a href="{{ route('pages.show', 'contact') }}" class="hover:text-brand-400">{{ __('Contact') }}</a></li>
                 </ul>
             </div>
 
             <div>
-                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-ink-300">Secure payments</p>
-                <p class="mt-4 text-sm text-ink-200">We accept Paystack and Flutterwave; choose whichever works best for you at checkout.</p>
+                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-ink-300">{{ __('Secure payments') }}</p>
+                <p class="mt-4 text-sm text-ink-200">{{ __('We accept Paystack and Flutterwave; choose whichever works best for you at checkout.') }}</p>
             </div>
         </div>
 
         <div class="border-t border-ink-800 py-6 text-center text-xs text-ink-400">
-            &copy; {{ now()->year }} Dora Creations. All rights reserved.
+            &copy; {{ now()->year }} Dora Creations. {{ __('All rights reserved.') }}
         </div>
     </footer>
 
