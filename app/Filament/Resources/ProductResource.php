@@ -125,7 +125,63 @@ class ProductResource extends Resource
 
                 Forms\Components\Section::make('Variants')
                     ->visible(fn (Forms\Get $get) => (bool) $get('has_variants'))
+                    ->description('Add options customers can choose from, such as size and color. Use the generator for every combination, or add variants one by one.')
                     ->schema([
+                        Forms\Components\Fieldset::make('Generate combinations')->schema([
+                            Forms\Components\TagsInput::make('generate_sizes')
+                                ->label('Sizes')
+                                ->placeholder('e.g. S, M, L (press Enter after each)')
+                                ->dehydrated(false),
+                            Forms\Components\TagsInput::make('generate_colors')
+                                ->label('Colors')
+                                ->placeholder('e.g. Black, Red (press Enter after each)')
+                                ->dehydrated(false),
+                            Forms\Components\TextInput::make('generate_stock')
+                                ->label('Stock for each new variant')
+                                ->numeric()
+                                ->minValue(0)
+                                ->default(0)
+                                ->dehydrated(false),
+                            Forms\Components\Actions::make([
+                                Forms\Components\Actions\Action::make('generateVariants')
+                                    ->label('Generate variants')
+                                    ->icon('heroicon-o-sparkles')
+                                    ->action(function (Forms\Get $get, Forms\Set $set) {
+                                        $sizes = array_values(array_filter(array_map('trim', (array) $get('generate_sizes')))) ?: [null];
+                                        $colors = array_values(array_filter(array_map('trim', (array) $get('generate_colors')))) ?: [null];
+
+                                        if ($sizes === [null] && $colors === [null]) {
+                                            return;
+                                        }
+
+                                        $variants = (array) $get('variants');
+                                        $exists = fn ($size, $color) => collect($variants)->contains(
+                                            fn ($v) => strcasecmp((string) ($v['size'] ?? ''), (string) $size) === 0
+                                                && strcasecmp((string) ($v['color'] ?? ''), (string) $color) === 0
+                                        );
+
+                                        foreach ($sizes as $size) {
+                                            foreach ($colors as $color) {
+                                                if ($exists($size, $color)) {
+                                                    continue;
+                                                }
+
+                                                $variants[(string) Str::uuid()] = [
+                                                    'size' => $size,
+                                                    'color' => $color,
+                                                    'sku' => null,
+                                                    'price_kobo' => null,
+                                                    'stock_quantity' => (int) ($get('generate_stock') ?: 0),
+                                                ];
+                                            }
+                                        }
+
+                                        $set('variants', $variants);
+                                        $set('generate_sizes', []);
+                                        $set('generate_colors', []);
+                                    }),
+                            ])->columnSpanFull(),
+                        ])->columns(3),
                         Forms\Components\Repeater::make('variants')
                             ->relationship()
                             ->schema([
@@ -143,6 +199,8 @@ class ProductResource extends Resource
                             ->columns(5)
                             ->defaultItems(0)
                             ->addActionLabel('Add variant')
+                            ->itemLabel(fn (array $state) => collect([$state['size'] ?? null, $state['color'] ?? null])->filter()->implode(' / ') ?: 'New variant')
+                            ->collapsible()
                             ->columnSpanFull(),
                     ]),
 

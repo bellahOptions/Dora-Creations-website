@@ -36,15 +36,43 @@ class AddToCart extends Component
         return $this->product->variants->pluck('size')->filter()->unique()->values()->all();
     }
 
+    /**
+     * Colors that exist for the selected size (all colors when the
+     * product has no sizes).
+     */
     public function availableColors(): array
     {
-        return $this->product->variants->pluck('color')->filter()->unique()->values()->all();
+        return $this->product->variants
+            ->when($this->size, fn ($variants) => $variants->where('size', $this->size))
+            ->pluck('color')->filter()->unique()->values()->all();
+    }
+
+    public function sizeInStock(string $size): bool
+    {
+        return $this->product->is_preorder
+            || $this->product->variants->where('size', $size)->contains(fn (ProductVariant $v) => $v->isInStock());
+    }
+
+    public function colorInStock(string $color): bool
+    {
+        return $this->product->is_preorder
+            || $this->product->variants
+                ->when($this->size, fn ($variants) => $variants->where('size', $this->size))
+                ->where('color', $color)
+                ->contains(fn (ProductVariant $v) => $v->isInStock());
     }
 
     public function selectSize(string $size): void
     {
         $this->size = $size;
         $this->justAdded = false;
+
+        // Keep the color valid for the new size.
+        $colors = $this->availableColors();
+
+        if ($colors && ! in_array($this->color, $colors, true)) {
+            $this->color = collect($colors)->first(fn ($c) => $this->colorInStock($c)) ?? $colors[0];
+        }
     }
 
     public function selectColor(string $color): void

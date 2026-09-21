@@ -6,7 +6,7 @@
                 <div class="mt-2 flex flex-wrap gap-2">
                     @foreach ($this->availableSizes() as $sizeOption)
                         <button type="button" wire:click="selectSize('{{ $sizeOption }}')"
-                            class="h-10 w-10 rounded-full border text-sm font-semibold transition {{ $size === $sizeOption ? 'border-ink-900 bg-ink-900 text-paper' : 'border-ink-200 text-ink-600 hover:border-ink-900' }}">
+                            class="h-10 min-w-10 rounded-full border px-3 text-sm font-semibold transition {{ $size === $sizeOption ? 'border-ink-900 bg-ink-900 text-paper' : 'border-ink-200 text-ink-600 hover:border-ink-900' }} {{ $this->sizeInStock($sizeOption) ? '' : 'line-through opacity-50' }}">
                             {{ $sizeOption }}
                         </button>
                     @endforeach
@@ -20,12 +20,17 @@
                 <div class="mt-2 flex flex-wrap gap-2">
                     @foreach ($this->availableColors() as $colorOption)
                         <button type="button" wire:click="selectColor('{{ $colorOption }}')"
-                            class="rounded-full border px-4 py-1.5 text-sm font-semibold transition {{ $color === $colorOption ? 'border-ink-900 bg-ink-900 text-paper' : 'border-ink-200 text-ink-600 hover:border-ink-900' }}">
+                            class="rounded-full border px-4 py-1.5 text-sm font-semibold transition {{ $color === $colorOption ? 'border-ink-900 bg-ink-900 text-paper' : 'border-ink-200 text-ink-600 hover:border-ink-900' }} {{ $this->colorInStock($colorOption) ? '' : 'line-through opacity-50' }}">
                             {{ $colorOption }}
                         </button>
                     @endforeach
                 </div>
             </div>
+        @endif
+
+        @if ($this->selectedVariant && $this->selectedVariant->price_kobo !== null && $this->selectedVariant->price_kobo !== $product->price_kobo)
+            <p class="text-lg font-semibold">{{ app(\App\Services\CurrencyService::class)->format($this->selectedVariant->price_kobo) }}
+                <span class="text-sm font-normal text-ink-400">for {{ $this->selectedVariant->label() }}</span></p>
         @endif
 
         @error('variant')
