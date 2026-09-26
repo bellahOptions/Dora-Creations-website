@@ -15,7 +15,9 @@ class ShopController extends Controller
 
         $product->load(['images', 'variants', 'category', 'approvedReviews.user']);
 
-        ActivityLogger::visitor("Viewed \"{$product->name}\".", $product);
+        // Deferred: this is the most-crawled page on the site, and the insert
+        // isn't worth spending on the response time.
+        ActivityLogger::visitorAfterResponse("Viewed \"{$product->name}\".", $product);
 
         $related = Product::query()
             ->published()

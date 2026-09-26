@@ -1,8 +1,10 @@
 <div class="container-store py-12">
     <div class="mb-10 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
+            {{-- The collection page supplies its own h1, so this one is only
+                 for /shop itself. --}}
             @unless ($category)
-                <h1 class="font-display text-3xl uppercase sm:text-4xl">Shop</h1>
+                <h1 class="font-display text-3xl uppercase sm:text-4xl">Shop all pieces</h1>
             @endunless
             <p class="mt-2 text-sm text-ink-500">{{ $products->total() }} {{ Str::plural('piece', $products->total()) }}</p>
         </div>

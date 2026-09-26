@@ -13,6 +13,10 @@ class PaymentWebhookController extends Controller
 {
     public function __invoke(Request $request, string $gateway, PaymentGatewayManager $gateways, PaymentService $paymentService): Response
     {
+        if (! $gateways->has($gateway)) {
+            return response()->noContent(404);
+        }
+
         $gatewayService = $gateways->get($gateway);
 
         if (! $gatewayService->verifyWebhookSignature($request)) {

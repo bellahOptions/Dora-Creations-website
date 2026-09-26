@@ -24,6 +24,10 @@ new #[Layout('layouts.guest')] class extends Component
 
     public function mount(User $user): void
     {
+        // This page hands out a verified session, so never let it be used
+        // against a non-admin account even if a link were somehow minted.
+        abort_unless($user->is_admin, 403);
+
         if ($user->hasVerifiedEmail()) {
             $this->redirect(route('login'), navigate: true);
 
@@ -42,6 +46,8 @@ new #[Layout('layouts.guest')] class extends Component
         ]);
 
         $user = User::findOrFail($this->userId);
+
+        abort_unless($user->is_admin, 403);
 
         if ($user->hasVerifiedEmail()) {
             $this->redirect(route('login'), navigate: true);

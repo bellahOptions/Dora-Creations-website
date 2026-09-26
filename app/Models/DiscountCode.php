@@ -117,6 +117,39 @@ class DiscountCode extends Model
         $this->increment('used_count');
     }
 
+    /**
+     * Atomically claim one use of this code.
+     *
+     * The cap used to be checked only when the order was created and counted
+     * only once payment landed, so a "single use" code could be applied to a
+     * burst of orders that all paid while used_count was still 0. Claiming at
+     * order time — with the cap re-checked inside the UPDATE — closes that
+     * window. Returns false when the code is already exhausted.
+     */
+    public function reserveUsage(): bool
+    {
+        $claimed = static::query()
+            ->whereKey($this->getKey())
+            ->where(fn ($query) => $query
+                ->whereNull('max_uses')
+                ->orWhereColumn('used_count', '<', 'max_uses'))
+            ->increment('used_count');
+
+        return $claimed > 0;
+    }
+
+    /**
+     * Hand a claimed use back when the order it was claimed for never gets
+     * paid for.
+     */
+    public function releaseUsage(): void
+    {
+        static::query()
+            ->whereKey($this->getKey())
+            ->where('used_count', '>', 0)
+            ->decrement('used_count');
+    }
+
     public function activityLogName(): string
     {
         return $this->code;

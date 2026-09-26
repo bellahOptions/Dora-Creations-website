@@ -6,15 +6,67 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     @php
-        $seoTitle = ($title ?? 'Dora Creations').', '.config('app.name');
-        $seoDescription = $description ?? 'Nigerian-made fashion, tees, tote bags and more, designed and produced by Dora Creations.';
+        $settings = \App\Models\SiteSetting::current();
+
+        // The site-wide title/description configured in the admin panel are
+        // the fallback for every page that doesn't bring its own.
+        $seoTitle = filled($title ?? null)
+            ? $title.' | '.config('app.name')
+            : ($settings->meta_title ?: config('app.name'));
+
+        $seoDescription = filled($description ?? null)
+            ? $description
+            : ($settings->meta_description
+                ?: 'Nigerian-made fashion, tees, tote bags and more, designed and produced by Dora Creations.');
+
         $seoImage = $image ?? asset('logo-on-light-background.svg');
         $seoCanonical = $canonical ?? url()->current();
+        $seoRobots = $robots ?? 'index, follow';
+
+        $socialLinks = collect([
+            $settings->social_instagram,
+            $settings->social_twitter,
+            $settings->social_facebook,
+        ])->filter()->values()->all();
+
+        $organizationSchema = array_filter([
+            '@context' => 'https://schema.org',
+            '@type' => 'Organization',
+            'name' => config('app.name'),
+            'url' => url('/'),
+            'logo' => asset('black-logo.svg'),
+            'sameAs' => $socialLinks ?: null,
+            'contactPoint' => ($settings->contact_email || $settings->contact_phone) ? array_filter([
+                '@type' => 'ContactPoint',
+                'contactType' => 'customer service',
+                'email' => $settings->contact_email,
+                'telephone' => $settings->contact_phone,
+                'areaServed' => 'NG',
+            ]) : null,
+        ]);
+
+        $websiteSchema = [
+            '@context' => 'https://schema.org',
+            '@type' => 'WebSite',
+            'name' => config('app.name'),
+            'url' => url('/'),
+            'potentialAction' => [
+                '@type' => 'SearchAction',
+                'target' => [
+                    '@type' => 'EntryPoint',
+                    'urlTemplate' => route('shop.index').'?q={search_term_string}',
+                ],
+                'query-input' => 'required name=search_term_string',
+            ],
+        ];
     @endphp
 
     <title>{{ $seoTitle }}</title>
     <meta name="description" content="{{ $seoDescription }}">
+    <meta name="robots" content="{{ $seoRobots }}">
     <link rel="canonical" href="{{ $seoCanonical }}">
+    <meta name="theme-color" content="#000000">
+    <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
 
     <meta property="og:site_name" content="{{ config('app.name') }}">
     <meta property="og:type" content="{{ $type ?? 'website' }}">
@@ -22,19 +74,21 @@
     <meta property="og:description" content="{{ $seoDescription }}">
     <meta property="og:url" content="{{ $seoCanonical }}">
     <meta property="og:image" content="{{ $seoImage }}">
+    <meta property="og:image:alt" content="{{ $seoImageAlt ?? $seoTitle }}">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{{ $seoTitle }}">
     <meta name="twitter:description" content="{{ $seoDescription }}">
     <meta name="twitter:image" content="{{ $seoImage }}">
+    <meta name="twitter:image:alt" content="{{ $seoImageAlt ?? $seoTitle }}">
+    @if ($settings->social_twitter)
+        <meta name="twitter:site" content="{{ '@'.ltrim(basename(rtrim($settings->social_twitter, '/')), '@') }}">
+    @endif
 
     <script type="application/ld+json">
-        {!! json_encode([
-            '@@context' => 'https://schema.org',
-            '@type' => 'Organization',
-            'name' => config('app.name'),
-            'url' => url('/'),
-            'logo' => asset('black-logo.svg'),
-        ], JSON_HEX_TAG) !!}
+        {!! json_encode($organizationSchema, JSON_HEX_TAG) !!}
+    </script>
+    <script type="application/ld+json">
+        {!! json_encode($websiteSchema, JSON_HEX_TAG) !!}
     </script>
     {!! $schema ?? '' !!}
 
@@ -205,7 +259,12 @@
 
     @livewire('cart.cart-drawer')
 
-    @php($activeAdModal = \App\Models\AdModal::active()->latest()->first())
+    {{-- Cached so this isn't a fresh query on every page of the storefront;
+         AdModal bumps the storefront cache version whenever it changes. --}}
+    @php($activeAdModal = \App\Services\StorefrontCache::remember(
+        'ad-modal:active',
+        fn () => \App\Models\AdModal::active()->latest()->first(),
+    ))
     @if ($activeAdModal)
         <x-ad-modal :modal="$activeAdModal" />
     @endif

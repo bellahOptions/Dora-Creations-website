@@ -1,6 +1,6 @@
 @props(['title' => 'My Account'])
 
-<x-layouts.storefront :title="$title">
+<x-layouts.storefront :title="$title" robots="noindex, nofollow">
     <div class="container-store py-12">
         <h1 class="font-display text-3xl uppercase sm:text-4xl">My Account</h1>
 

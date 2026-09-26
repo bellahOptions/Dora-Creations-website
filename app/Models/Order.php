@@ -3,10 +3,10 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasUuid;
-use App\Notifications\NewOrderPlaced;
-use App\Notifications\OrderStatusUpdated;
+use App\Notifications\NewOrderPlaced;use App\Notifications\OrderStatusUpdated;
 use App\Notifications\ReviewRequested;
 use App\Services\ActivityLogger;
+use App\Services\OrderStockService;
 use App\Support\Money;
 use Database\Factories\OrderFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -35,6 +35,12 @@ class Order extends Model
     public const STATUS_REJECTED_REFUNDED = 'rejected_refunded';
 
     public const STATUS_REVIEW_REQUESTED = 'review_requested';
+
+    /**
+     * Pseudo-gateway for orders the customer pays by direct bank transfer.
+     * No gateway API is involved; an admin confirms the money arrived.
+     */
+    public const GATEWAY_BANK_TRANSFER = 'bank_transfer';
 
     /**
      * Statuses an admin can move an order through after payment is confirmed.
@@ -70,6 +76,9 @@ class Order extends Model
         'payment_gateway',
         'payment_reference',
         'paid_at',
+        'transfer_declared_at',
+        'stock_reserved_at',
+        'stock_released_at',
         'customer_note',
     ];
 
@@ -77,6 +86,9 @@ class Order extends Model
     {
         return [
             'paid_at' => 'datetime',
+            'transfer_declared_at' => 'datetime',
+            'stock_reserved_at' => 'datetime',
+            'stock_released_at' => 'datetime',
         ];
     }
 
@@ -133,6 +145,19 @@ class Order extends Model
 
         $this->update(['status' => $status]);
 
+        // An order that never gets paid must not keep holding stock it
+        // reserved at checkout, nor a discount-code use. Safe to call more
+        // than once — the release reports whether it actually happened.
+        if ($status === self::STATUS_PAYMENT_FAILED) {
+            $released = app(OrderStockService::class)->release($this);
+
+            if ($released && $this->discount_code) {
+                DiscountCode::where('code', $this->discount_code)->first()?->releaseUsage();
+            }
+
+            $this->refresh();
+        }
+
         $this->statusHistories()->create([
             'status' => $status,
             'note' => $note,
@@ -164,7 +189,7 @@ class Order extends Model
         };
     }
 
-    protected function notifyCustomer(NotificationInstance $notification): void
+    public function notifyCustomer(NotificationInstance $notification): void
     {
         if ($this->user) {
             $this->user->notify($notification);
@@ -176,6 +201,28 @@ class Order extends Model
     public function isPaid(): bool
     {
         return $this->paid_at !== null;
+    }
+
+    public function isBankTransfer(): bool
+    {
+        return $this->payment_gateway === self::GATEWAY_BANK_TRANSFER;
+    }
+
+    /**
+     * A bank transfer order that is still waiting on either the customer's
+     * money or an admin confirming it landed. This is the only state in which
+     * the storefront shows the "pay into this account" instructions.
+     */
+    public function awaitingBankTransfer(): bool
+    {
+        return $this->isBankTransfer()
+            && ! $this->isPaid()
+            && $this->status === self::STATUS_PENDING_PAYMENT;
+    }
+
+    public function hasDeclaredTransfer(): bool
+    {
+        return $this->transfer_declared_at !== null;
     }
 
     public function customerName(): string

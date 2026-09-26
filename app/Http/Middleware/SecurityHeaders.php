@@ -30,6 +30,13 @@ class SecurityHeaders
         $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(self)');
         $response->headers->set('Cross-Origin-Opener-Policy', 'same-origin');
 
+        // HSTS: only meaningful (and only sent) over a secure connection, so
+        // local http development isn't pinned to https by its own browser.
+        // Production forces the https scheme, so this always applies there.
+        if ($request->isSecure()) {
+            $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+        }
+
         // The Vite dev server (npm/composer run dev) serves assets and HMR
         // websocket traffic from its own origin/port, which a strict 'self'
         // CSP blocks outright. Only relax script/style/connect-src for that

@@ -63,6 +63,18 @@ class CartService
         ]);
     }
 
+    /**
+     * Resolve a cart item that belongs to this visitor's own cart.
+     *
+     * Every cart mutation goes through here. `cart_items.id` is a plain
+     * auto-increment, so looking a row up by key alone would let any visitor
+     * edit or delete another shopper's cart line by guessing an id.
+     */
+    public function findOwnedItem(int $itemId): CartItem
+    {
+        return $this->currentCart()->items()->whereKey($itemId)->firstOrFail();
+    }
+
     public function updateQuantity(CartItem $item, int $quantity): void
     {
         if ($quantity < 1) {

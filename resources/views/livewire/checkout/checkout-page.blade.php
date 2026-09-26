@@ -76,17 +76,31 @@
 
             <section>
                 <h2 class="font-display text-lg uppercase">Payment method</h2>
-                <p class="mt-1 text-sm text-ink-500">Choose whichever works best for you; both are secure.</p>
+                <p class="mt-1 text-sm text-ink-500">Choose whichever works best for you; all options are secure.</p>
 
                 <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                     @foreach ($gateways as $key => $gatewayInstance)
                         <label class="flex cursor-pointer items-center gap-3 rounded-xl border p-4 transition {{ $gateway === $key ? 'border-ink-900 bg-ink-50' : 'border-ink-200' }}">
-                            <input type="radio" wire:model="gateway" value="{{ $key }}" class="text-brand-600 focus:ring-brand-500">
+                            <input type="radio" wire:model.live="gateway" value="{{ $key }}" class="text-brand-600 focus:ring-brand-500">
                             <span class="font-semibold">{{ $gatewayInstance->label() }}</span>
                         </label>
                     @endforeach
+
+                    @if ($bankTransferAvailable)
+                        <label class="flex cursor-pointer items-center gap-3 rounded-xl border p-4 transition {{ $gateway === \App\Models\Order::GATEWAY_BANK_TRANSFER ? 'border-ink-900 bg-ink-50' : 'border-ink-200' }}">
+                            <input type="radio" wire:model.live="gateway" value="{{ \App\Models\Order::GATEWAY_BANK_TRANSFER }}" class="text-brand-600 focus:ring-brand-500">
+                            <span class="font-semibold">Bank transfer</span>
+                        </label>
+                    @endif
                 </div>
                 <x-input-error :messages="$errors->get('gateway')" class="mt-2" />
+
+                @if ($bankTransferAvailable && $gateway === \App\Models\Order::GATEWAY_BANK_TRANSFER)
+                    <div class="mt-4 rounded-xl border border-ink-100 bg-paper-soft p-4 text-sm text-ink-600">
+                        <p class="font-semibold text-ink-800">How bank transfer works</p>
+                        <p class="mt-1">Place the order and we'll show you the account to pay into, along with your order number to use as the transfer reference. Your order ships once the transfer clears.</p>
+                    </div>
+                @endif
             </section>
 
             <section>
@@ -166,10 +180,21 @@
 
             <button type="submit" wire:loading.attr="disabled" wire:target="placeOrder"
                 class="mt-6 flex w-full items-center justify-center rounded-full bg-ink-900 px-6 py-3 text-sm font-semibold uppercase tracking-wide text-paper transition hover:bg-brand-500 disabled:opacity-60">
-                <span wire:loading.remove wire:target="placeOrder">Place order &amp; pay</span>
-                <span wire:loading wire:target="placeOrder">Redirecting to payment…</span>
+                @if ($gateway === \App\Models\Order::GATEWAY_BANK_TRANSFER)
+                    <span wire:loading.remove wire:target="placeOrder">Place order</span>
+                    <span wire:loading wire:target="placeOrder">Placing order…</span>
+                @else
+                    <span wire:loading.remove wire:target="placeOrder">Place order &amp; pay</span>
+                    <span wire:loading wire:target="placeOrder">Redirecting to payment…</span>
+                @endif
             </button>
-            <p class="mt-3 text-center text-xs text-ink-400">You'll be redirected to complete payment securely.</p>
+            <p class="mt-3 text-center text-xs text-ink-400">
+                @if ($gateway === \App\Models\Order::GATEWAY_BANK_TRANSFER)
+                    You'll get the account details to transfer to on the next screen.
+                @else
+                    You'll be redirected to complete payment securely.
+                @endif
+            </p>
         </div>
     </form>
 </div>

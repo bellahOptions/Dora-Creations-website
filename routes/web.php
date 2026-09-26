@@ -46,8 +46,15 @@ Route::get('/track-order', [OrderTrackingController::class, 'lookup'])->name('or
 Route::post('/track-order', [OrderTrackingController::class, 'find'])
     ->middleware('throttle:10,1')
     ->name('order-tracking.find');
-Route::get('/track-order/{token}', [OrderTrackingController::class, 'show'])->name('order-tracking.show');
-Route::get('/track-order/{token}/receipt.pdf', [OrderTrackingController::class, 'receipt'])->name('order-tracking.receipt');
+// Throttled: the token is a shareable bearer credential for someone's order,
+// so it shouldn't be cheap to hammer.
+Route::middleware('throttle:60,1')->group(function () {
+    Route::get('/track-order/{token}', [OrderTrackingController::class, 'show'])->name('order-tracking.show');
+    Route::get('/track-order/{token}/receipt.pdf', [OrderTrackingController::class, 'receipt'])->name('order-tracking.receipt');
+});
+Route::post('/track-order/{token}/transfer-sent', [OrderTrackingController::class, 'declareTransfer'])
+    ->middleware('throttle:10,1')
+    ->name('order-tracking.declare-transfer');
 
 Route::middleware(['auth', 'verified'])->prefix('account')->name('account.')->group(function () {
     Route::get('/orders', [AccountOrderController::class, 'index'])->name('orders.index');

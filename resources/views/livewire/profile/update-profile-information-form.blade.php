@@ -28,7 +28,10 @@ new class extends Component
         $validated = $this->validate([
             'name' => ['required', 'string', 'max:255'],
             'phone' => ['required', 'string', 'max:20'],
-            'avatar' => ['nullable', 'image', 'max:5120'],
+            // Not the `image` rule: it accepts SVG, and SVG is a script host.
+            // Uploads here are served from the app's own origin, so an SVG with
+            // <script> inside would run same-origin with the admin panel.
+            'avatar' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'mimetypes:image/jpeg,image/png,image/webp', 'max:5120'],
         ]);
 
         unset($validated['avatar']);
@@ -82,7 +85,7 @@ new class extends Component
                 </div>
                 <label class="cursor-pointer text-sm font-semibold text-brand-600 hover:underline">
                     Change photo
-                    <input type="file" wire:model="avatar" accept="image/*" class="hidden">
+                    <input type="file" wire:model="avatar" accept="image/jpeg,image/png,image/webp" class="hidden">
                 </label>
             </div>
             <div wire:loading wire:target="avatar" class="mt-1 text-xs text-ink-400">Uploading…</div>

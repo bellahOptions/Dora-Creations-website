@@ -24,6 +24,15 @@ class PaymentGatewayManager
     }
 
     /**
+     * Whether a gateway key is real. Callers that take the key from the URL
+     * check this so an unknown gateway is a 404, not a 500.
+     */
+    public function has(string $key): bool
+    {
+        return isset($this->gateways[$key]);
+    }
+
+    /**
      * @return array<string, PaymentGateway>
      */
     public function all(): array

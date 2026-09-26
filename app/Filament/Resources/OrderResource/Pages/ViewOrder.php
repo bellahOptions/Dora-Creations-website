@@ -5,6 +5,7 @@ namespace App\Filament\Resources\OrderResource\Pages;
 use App\Filament\Resources\OrderResource;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Services\PaymentService;
 use App\Services\Payments\PaymentGatewayManager;
 use Filament\Actions;
 use Filament\Forms;
@@ -27,6 +28,35 @@ class ViewOrder extends ViewRecord
                 ->color('gray')
                 ->url(fn () => route('order-tracking.receipt', $this->record->public_token))
                 ->openUrlInNewTab(),
+
+            Actions\Action::make('confirmBankTransfer')
+                ->label('Confirm bank transfer')
+                ->icon('heroicon-o-check-badge')
+                ->color('success')
+                ->visible(fn () => $this->record->awaitingBankTransfer())
+                ->modalHeading('Confirm the transfer has landed')
+                ->modalDescription('Only confirm once the money is actually in the account. This marks the order paid and moves it to processing.')
+                ->modalSubmitActionLabel('Yes, payment received')
+                ->form([
+                    Forms\Components\Textarea::make('note')
+                        ->label('Note (optional, visible in the order history)')
+                        ->rows(2),
+                ])
+                ->action(function (array $data, PaymentService $payments): void {
+                    $confirmed = $payments->markBankTransferReceived(
+                        $this->record,
+                        auth()->user(),
+                        $data['note'] ?: null,
+                    );
+
+                    $notification = Notification::make()
+                        ->title($confirmed ? 'Bank transfer confirmed' : 'This order was already marked paid')
+                        ->body($confirmed ? 'The order is now processing and the customer has been emailed.' : null);
+
+                    ($confirmed ? $notification->success() : $notification->warning())->send();
+
+                    $this->record->refresh();
+                }),
 
             Actions\Action::make('updateStatus')
                 ->label('Update status')
@@ -92,7 +122,11 @@ class ViewOrder extends ViewRecord
 
                     $this->record->refresh();
                 })
-                ->visible(fn () => $this->record->isPaid() && $this->record->status !== Order::STATUS_REJECTED_REFUNDED),
+                ->visible(fn () => $this->record->isPaid()
+                    && $this->record->status !== Order::STATUS_REJECTED_REFUNDED
+                    // Bank transfers have no gateway transaction to reverse;
+                    // refunding one is a manual bank action.
+                    && $this->record->payment_gateway !== Order::GATEWAY_BANK_TRANSFER),
         ];
     }
 

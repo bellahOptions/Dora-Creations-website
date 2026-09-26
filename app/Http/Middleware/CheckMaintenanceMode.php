@@ -15,7 +15,10 @@ class CheckMaintenanceMode
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if ($request->is('admin*') || $request->is('webhooks*')) {
+        // robots.txt stays reachable during maintenance so it can tell
+        // crawlers to back off (see RobotsController) instead of handing them
+        // a 503 while still advertising a sitemap.
+        if ($request->is('admin*') || $request->is('webhooks*') || $request->is('robots.txt')) {
             return $next($request);
         }
 

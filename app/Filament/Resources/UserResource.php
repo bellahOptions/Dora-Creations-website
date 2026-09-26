@@ -39,7 +39,16 @@ class UserResource extends Resource
             Forms\Components\TextInput::make('name')->required()->maxLength(255),
             Forms\Components\TextInput::make('email')->disabled()->dehydrated(false),
             Forms\Components\TextInput::make('phone')->tel()->maxLength(20),
-            Forms\Components\Toggle::make('is_admin')->label('Admin access'),
+            Forms\Components\Toggle::make('is_admin')
+                ->label('Admin access')
+                // You can't switch off your own admin access. That also means
+                // the last admin can never be demoted — because the last admin
+                // is, by definition, the person looking at this screen.
+                ->disabled(fn (?User $record): bool => $record?->is(auth()->user()) ?? false)
+                ->dehydrated(fn (?User $record): bool => ! ($record?->is(auth()->user()) ?? false))
+                ->helperText(fn (?User $record): bool => ($record?->is(auth()->user()) ?? false)
+                    ? 'You cannot remove your own admin access — ask another admin to do it.'
+                    : 'Grants full access to this admin panel.'),
         ])->columns(2);
     }
 

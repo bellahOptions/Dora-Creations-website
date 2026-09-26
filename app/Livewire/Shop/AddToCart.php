@@ -47,6 +47,25 @@ class AddToCart extends Component
             ->pluck('color')->filter()->unique()->values()->all();
     }
 
+    /**
+     * A product flagged as variant-based but saved with no variant rows has no
+     * options left to render. Without this the visitor only ever sees "please
+     * select a size/color" with nothing to pick, so the product is treated as
+     * unavailable instead of unsellable-but-blaming-the-customer.
+     */
+    public function getOptionsMissingProperty(): bool
+    {
+        return $this->product->has_variants && $this->product->variants->isEmpty();
+    }
+
+    /**
+     * Human-readable summary of the current selection, e.g. "M / Black".
+     */
+    public function getSelectedOptionLabelProperty(): ?string
+    {
+        return $this->selectedVariant?->label() ?: null;
+    }
+
     public function sizeInStock(string $size): bool
     {
         return $this->product->is_preorder
@@ -108,6 +127,10 @@ class AddToCart extends Component
      */
     public function getCanPurchaseProperty(): bool
     {
+        if ($this->optionsMissing) {
+            return false;
+        }
+
         return $this->product->is_preorder || $this->inStock;
     }
 
@@ -124,6 +147,12 @@ class AddToCart extends Component
     public function addToCart(CartService $cartService): void
     {
         $this->resetErrorBag();
+
+        if ($this->optionsMissing) {
+            $this->addError('variant', 'This item is not available in any size or color yet. Please check back soon.');
+
+            return;
+        }
 
         if ($this->product->has_variants && ! $this->selectedVariant) {
             $this->addError('variant', 'Please select a size/color.');

@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $code }}, {{ $title }}, {{ config('app.name') }}</title>
+    <meta name="robots" content="noindex, nofollow">
     @vite(['resources/css/app.css'])
 </head>
 <body class="flex min-h-screen flex-col items-center justify-center bg-paper px-6 py-12 text-center text-ink-900">

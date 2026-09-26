@@ -12,6 +12,8 @@ class CheckoutCallbackController extends Controller
 {
     public function __invoke(Request $request, string $gateway, PaymentGatewayManager $gateways, PaymentService $paymentService): RedirectResponse
     {
+        abort_unless($gateways->has($gateway), 404);
+
         $reference = $request->query('reference')
             ?? $request->query('trxref')
             ?? $request->query('tx_ref');

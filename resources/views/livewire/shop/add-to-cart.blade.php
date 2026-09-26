@@ -1,36 +1,51 @@
 <div class="mt-6 space-y-6">
     @if ($product->has_variants)
-        @if (count($this->availableSizes()) > 0)
-            <div>
-                <p class="text-xs font-semibold uppercase tracking-wide text-ink-400">Size</p>
-                <div class="mt-2 flex flex-wrap gap-2">
-                    @foreach ($this->availableSizes() as $sizeOption)
-                        <button type="button" wire:click="selectSize('{{ $sizeOption }}')"
-                            class="h-10 min-w-10 rounded-full border px-3 text-sm font-semibold transition {{ $size === $sizeOption ? 'border-ink-900 bg-ink-900 text-paper' : 'border-ink-200 text-ink-600 hover:border-ink-900' }} {{ $this->sizeInStock($sizeOption) ? '' : 'line-through opacity-50' }}">
-                            {{ $sizeOption }}
-                        </button>
-                    @endforeach
-                </div>
+        @if ($this->optionsMissing)
+            <div class="flex items-start gap-2 rounded-lg border border-ink-100 bg-ink-50 px-4 py-3 text-sm text-ink-600">
+                <x-heroicon-o-exclamation-circle class="mt-0.5 h-5 w-5 flex-shrink-0 text-ink-400" />
+                <span>Size and color options for this item aren't available yet. Please check back soon.</span>
             </div>
-        @endif
-
-        @if (count($this->availableColors()) > 0)
-            <div>
-                <p class="text-xs font-semibold uppercase tracking-wide text-ink-400">Color</p>
-                <div class="mt-2 flex flex-wrap gap-2">
-                    @foreach ($this->availableColors() as $colorOption)
-                        <button type="button" wire:click="selectColor('{{ $colorOption }}')"
-                            class="rounded-full border px-4 py-1.5 text-sm font-semibold transition {{ $color === $colorOption ? 'border-ink-900 bg-ink-900 text-paper' : 'border-ink-200 text-ink-600 hover:border-ink-900' }} {{ $this->colorInStock($colorOption) ? '' : 'line-through opacity-50' }}">
-                            {{ $colorOption }}
-                        </button>
-                    @endforeach
+        @else
+            @if (count($this->availableSizes()) > 0)
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wide text-ink-400">Size</p>
+                    <div class="mt-2 flex flex-wrap gap-2">
+                        @foreach ($this->availableSizes() as $sizeOption)
+                            <button type="button" wire:click="selectSize('{{ $sizeOption }}')"
+                                aria-pressed="{{ $size === $sizeOption ? 'true' : 'false' }}"
+                                class="h-10 min-w-10 rounded-full border px-3 text-sm font-semibold transition {{ $size === $sizeOption ? 'border-ink-900 bg-ink-900 text-paper' : 'border-ink-200 text-ink-600 hover:border-ink-900' }} {{ $this->sizeInStock($sizeOption) ? '' : 'line-through opacity-50' }}">
+                                {{ $sizeOption }}
+                            </button>
+                        @endforeach
+                    </div>
                 </div>
-            </div>
-        @endif
+            @endif
 
-        @if ($this->selectedVariant && $this->selectedVariant->price_kobo !== null && $this->selectedVariant->price_kobo !== $product->price_kobo)
-            <p class="text-lg font-semibold">{{ app(\App\Services\CurrencyService::class)->format($this->selectedVariant->price_kobo) }}
-                <span class="text-sm font-normal text-ink-400">for {{ $this->selectedVariant->label() }}</span></p>
+            @if (count($this->availableColors()) > 0)
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wide text-ink-400">Color</p>
+                    <div class="mt-2 flex flex-wrap gap-2">
+                        @foreach ($this->availableColors() as $colorOption)
+                            <button type="button" wire:click="selectColor('{{ $colorOption }}')"
+                                aria-pressed="{{ $color === $colorOption ? 'true' : 'false' }}"
+                                class="rounded-full border px-4 py-1.5 text-sm font-semibold transition {{ $color === $colorOption ? 'border-ink-900 bg-ink-900 text-paper' : 'border-ink-200 text-ink-600 hover:border-ink-900' }} {{ $this->colorInStock($colorOption) ? '' : 'line-through opacity-50' }}">
+                                {{ $colorOption }}
+                            </button>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            @if ($this->selectedOptionLabel)
+                <p class="text-sm text-ink-500">
+                    Selected: <span class="font-semibold text-ink-800">{{ $this->selectedOptionLabel }}</span>
+                </p>
+            @endif
+
+            @if ($this->selectedVariant && $this->selectedVariant->price_kobo !== null && $this->selectedVariant->price_kobo !== $product->price_kobo)
+                <p class="text-lg font-semibold">{{ app(\App\Services\CurrencyService::class)->format($this->selectedVariant->price_kobo) }}
+                    <span class="text-sm font-normal text-ink-400">for {{ $this->selectedVariant->label() }}</span></p>
+            @endif
         @endif
 
         @error('variant')
@@ -69,6 +84,10 @@
                     @endif
                 </span>
                 <span wire:loading wire:target="addToCart">Adding…</span>
+            </button>
+        @elseif ($this->optionsMissing)
+            <button disabled class="flex-1 cursor-not-allowed rounded-full bg-ink-200 px-8 py-3 text-sm font-semibold uppercase tracking-wide text-ink-400">
+                Unavailable
             </button>
         @else
             <button disabled class="flex-1 cursor-not-allowed rounded-full bg-ink-200 px-8 py-3 text-sm font-semibold uppercase tracking-wide text-ink-400">

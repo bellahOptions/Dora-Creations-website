@@ -18,13 +18,32 @@ class SiteSetting extends Model
         'social_facebook',
         'shipping_flat_rate_kobo',
         'free_shipping_threshold_kobo',
+        'bank_transfer_enabled',
+        'bank_name',
+        'bank_code',
+        'bank_account_number',
+        'bank_account_name',
+        'bank_transfer_note',
     ];
 
     protected function casts(): array
     {
         return [
             'maintenance_mode' => 'boolean',
+            'bank_transfer_enabled' => 'boolean',
         ];
+    }
+
+    /**
+     * Bank transfer is only offered at checkout when the admin has switched
+     * it on *and* there's a complete account for the customer to pay into.
+     */
+    public function bankTransferIsAvailable(): bool
+    {
+        return (bool) $this->bank_transfer_enabled
+            && filled($this->bank_name)
+            && filled($this->bank_account_number)
+            && filled($this->bank_account_name);
     }
 
     public static function current(): self

@@ -11,17 +11,25 @@
         '@context' => 'https://schema.org',
         '@type' => 'Product',
         'name' => $product->name,
-        'description' => $product->short_description ?? Str::limit(strip_tags($product->description), 300),
+        'description' => $product->short_description ?: Str::limit(strip_tags((string) $product->description), 300),
         'sku' => $product->sku,
         'image' => $galleryItems->pluck('url')->values()->all(),
+        'brand' => [
+            '@type' => 'Brand',
+            'name' => config('app.name'),
+        ],
         'offers' => [
             '@type' => 'Offer',
             'url' => route('shop.show', $product),
             'priceCurrency' => 'NGN',
             'price' => number_format($product->price_kobo / 100, 2, '.', ''),
             'availability' => $product->isInStock() ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+            'itemCondition' => 'https://schema.org/NewCondition',
         ],
     ];
+    if ($product->category) {
+        $productSchema['category'] = $product->category->name;
+    }
     if ($product->approvedReviews->isNotEmpty()) {
         $productSchema['aggregateRating'] = [
             '@type' => 'AggregateRating',
@@ -31,9 +39,10 @@
     }
 @endphp
 
-<x-layouts.storefront :title="$product->name"
+<x-layouts.storefront :title="$product->meta_title ?: $product->name"
     :description="$product->meta_description ?? $product->short_description ?? Str::limit(strip_tags($product->description), 150)"
     :image="$product->featuredImageUrl()"
+    :image-alt="$product->name"
     type="product"
     :schema="'<script type=\'application/ld+json\'>'.json_encode($productSchema, JSON_HEX_TAG).'</script>'">
     <div class="container-store py-10">
@@ -61,6 +70,8 @@
                         @forelse ($galleryItems as $image)
                             <div class="swiper-slide">
                                 <img src="{{ $image['url'] }}" alt="{{ $image['alt'] }}"
+                                    @if ($loop->first) loading="eager" fetchpriority="high" @else loading="lazy" @endif
+                                    decoding="async"
                                     onerror="this.onerror=null;this.src='{{ asset('placeholder.svg') }}';"
                                     class="h-full w-full object-cover">
                             </div>

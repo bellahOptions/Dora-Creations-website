@@ -169,7 +169,10 @@ return [
     |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE'),
+    // Defaults to secure in production so a deploy that forgets to set
+    // SESSION_SECURE_COOKIE can't leak sessions over plain HTTP, while local
+    // http development still works.
+    'secure' => env('SESSION_SECURE_COOKIE', env('APP_ENV') === 'production'),
 
     /*
     |--------------------------------------------------------------------------

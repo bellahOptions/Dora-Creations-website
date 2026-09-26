@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Page;
+use App\Services\StorefrontCache;
 use Illuminate\Http\Response;
 
 class LlmsTxtController extends Controller
@@ -16,6 +17,22 @@ class LlmsTxtController extends Controller
      * guess at the full HTML.
      */
     public function __invoke(): Response
+    {
+        // Same version-keyed storefront cache as the sitemap: cheap to serve,
+        // and content edits still invalidate it straight away.
+        $body = StorefrontCache::remember('llms.txt', function (): string {
+            return implode("\n", $this->lines());
+        });
+
+        return response($body, 200)
+            ->header('Content-Type', 'text/plain; charset=utf-8')
+            ->header('Cache-Control', 'public, max-age=3600');
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    protected function lines(): array
     {
         $lines = [
             '# Dora Creations',
@@ -58,7 +75,6 @@ class LlmsTxtController extends Controller
         $lines[] = '- Orders can be placed as a guest or with an account; order status can be checked via the order tracking link above without signing in.';
         $lines[] = '- This file is generated automatically and reflects the current catalog structure, not real-time stock or pricing, link to the pages above for current details.';
 
-        return response(implode("\n", $lines), 200)
-            ->header('Content-Type', 'text/plain; charset=utf-8');
+        return $lines;
     }
 }

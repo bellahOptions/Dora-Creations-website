@@ -125,7 +125,7 @@ class ProductResource extends Resource
 
                 Forms\Components\Section::make('Variants')
                     ->visible(fn (Forms\Get $get) => (bool) $get('has_variants'))
-                    ->description('Add options customers can choose from, such as size and color. Use the generator for every combination, or add variants one by one.')
+                    ->description('Add the options customers choose from on the product page, such as size and color. Use the generator for every combination, or add variants one by one. At least one variant is required — without one the storefront has no options to show and the product can\'t be bought.')
                     ->schema([
                         Forms\Components\Fieldset::make('Generate combinations')->schema([
                             Forms\Components\TagsInput::make('generate_sizes')
@@ -201,7 +201,16 @@ class ProductResource extends Resource
                             ->addActionLabel('Add variant')
                             ->itemLabel(fn (array $state) => collect([$state['size'] ?? null, $state['color'] ?? null])->filter()->implode(' / ') ?: 'New variant')
                             ->collapsible()
-                            ->columnSpanFull(),
+                            ->columnSpanFull()
+                            // A variant product with no variant rows renders no size/color
+                            // options on the storefront, leaving customers with nothing to
+                            // pick — so refuse to save that broken state.
+                            ->required(fn (Forms\Get $get): bool => (bool) $get('has_variants'))
+                            ->minItems(fn (Forms\Get $get): ?int => $get('has_variants') ? 1 : null)
+                            ->validationMessages([
+                                'required' => 'Add at least one size/color variant. Without one, customers see no options to choose from on the product page.',
+                                'min' => 'Add at least one size/color variant. Without one, customers see no options to choose from on the product page.',
+                            ]),
                     ]),
 
                 Forms\Components\Section::make('Featured image')

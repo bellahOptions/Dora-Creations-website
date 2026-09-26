@@ -3,14 +3,17 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasUuid;
+use App\Models\Concerns\InvalidatesStorefrontCache;
 use App\Models\Concerns\LogsAdminActivity;
+use App\Support\HtmlSanitizer;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 
 class AdModal extends Model
 {
-    use HasUuid, LogsAdminActivity;
+    use HasUuid, InvalidatesStorefrontCache, LogsAdminActivity;
 
     public const FREQUENCY_SESSION = 'session';
 
@@ -41,6 +44,15 @@ class AdModal extends Model
     public function getRouteKeyName(): string
     {
         return 'uuid';
+    }
+
+    /**
+     * Rendered unescaped in the modal shown on every storefront page, so it
+     * is cleaned on write.
+     */
+    protected function body(): Attribute
+    {
+        return Attribute::make(set: fn (?string $value) => HtmlSanitizer::clean($value));
     }
 
     public function scopeActive(Builder $query): Builder

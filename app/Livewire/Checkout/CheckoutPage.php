@@ -2,20 +2,26 @@
 
 namespace App\Livewire\Checkout;
 
+use App\Exceptions\CheckoutException;
 use App\Models\Address;
 use App\Models\DiscountCode;
+use App\Models\Order;
 use App\Models\SiteSetting;
+use App\Models\User;
+use App\Notifications\BankTransferInstructions;
+use App\Notifications\BankTransferUpdate;
 use App\Services\CartService;
 use App\Services\OrderService;
 use App\Services\Payments\PaymentGatewayManager;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
-#[Layout('components.layouts.storefront')]
+#[Layout('components.layouts.storefront', ['title' => 'Checkout', 'robots' => 'noindex, nofollow'])]
 class CheckoutPage extends Component
 {
     public string $email = '';
@@ -80,10 +86,29 @@ class CheckoutPage extends Component
         return Auth::check() && $this->addressId !== null;
     }
 
+    /**
+     * Payment options the customer may actually pick right now: the card
+     * gateways, plus bank transfer when the admin has a verified account
+     * configured. Validated against this same list server-side so a tampered
+     * request can't select a method that isn't on offer.
+     *
+     * @return array<int, string>
+     */
+    protected function availableGatewayKeys(): array
+    {
+        $keys = array_keys(app(PaymentGatewayManager::class)->all());
+
+        if (SiteSetting::current()->bankTransferIsAvailable()) {
+            $keys[] = Order::GATEWAY_BANK_TRANSFER;
+        }
+
+        return $keys;
+    }
+
     protected function rules(): array
     {
         $rules = [
-            'gateway' => ['required', Rule::in(['paystack', 'flutterwave'])],
+            'gateway' => ['required', Rule::in($this->availableGatewayKeys())],
             'customerNote' => ['nullable', 'string', 'max:1000'],
         ];
 
@@ -201,14 +226,39 @@ class CheckoutPage extends Component
             return;
         }
 
-        $order = $orderService->createFromCart(
-            $cart,
-            $this->shippingData(),
-            Auth::user(),
-            Auth::check() ? null : $this->email,
-            $this->customerNote ?: null,
-            $this->appliedCouponCode,
-        );
+        $order = null;
+
+        try {
+            $order = $orderService->createFromCart(
+                $cart,
+                $this->shippingData(),
+                Auth::user(),
+                Auth::check() ? null : $this->email,
+                $this->customerNote ?: null,
+                $this->appliedCouponCode,
+                $this->gateway === Order::GATEWAY_BANK_TRANSFER ? Order::GATEWAY_BANK_TRANSFER : null,
+            );
+        } catch (CheckoutException $e) {
+            // The order and its stock holds rolled back with the transaction,
+            // so the cart is untouched and the customer can adjust it.
+            $this->submitting = false;
+            $this->addError('cart', $e->userMessage());
+
+            return;
+        }
+
+        // Bank transfer has no gateway to redirect to: the customer gets the
+        // account details and the order waits for an admin to confirm the money.
+        if ($this->gateway === Order::GATEWAY_BANK_TRANSFER) {
+            $orderService->clearCart($cart);
+            $this->dispatch('cart-updated');
+
+            $this->notifyBankTransferPlaced($order);
+
+            $this->redirect(route('order-tracking.show', $order->public_token), navigate: true);
+
+            return;
+        }
 
         $gatewayService = $gateways->get($this->gateway);
 
@@ -227,6 +277,26 @@ class CheckoutPage extends Component
         $this->dispatch('cart-updated');
 
         $this->redirect($result['redirect_url']);
+    }
+
+    /**
+     * Emails the customer the account to pay into, and tells the shop owner
+     * a transfer is coming. Entirely best-effort: the order is already placed
+     * and the stock is already held, so a mail problem must never surface as
+     * a failed checkout.
+     */
+    protected function notifyBankTransferPlaced(Order $order): void
+    {
+        try {
+            $order->notifyCustomer(new BankTransferInstructions($order));
+
+            Notification::send(
+                User::where('is_admin', true)->get(),
+                new BankTransferUpdate($order, BankTransferUpdate::PHASE_PLACED),
+            );
+        } catch (\Throwable $e) {
+            report($e);
+        }
     }
 
     public function render(PaymentGatewayManager $gateways, CartService $cartService)
@@ -261,6 +331,7 @@ class CheckoutPage extends Component
             'shippingKobo' => $shippingKobo,
             'discount' => $discount,
             'discountKobo' => $discountKobo,
+            'bankTransferAvailable' => $settings->bankTransferIsAvailable(),
         ]);
     }
 }

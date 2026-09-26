@@ -31,6 +31,13 @@ class ReconcilePendingPayments extends Command
 
         $orders = Order::query()
             ->where('status', Order::STATUS_PENDING_PAYMENT)
+            // Bank transfer orders were never sent to a gateway, so asking
+            // Paystack/Flutterwave about them always comes back "no such
+            // transaction" — which would wrongly fail an order whose money is
+            // sitting in the bank waiting for an admin to confirm it.
+            ->where(fn ($query) => $query
+                ->whereNull('payment_gateway')
+                ->orWhere('payment_gateway', '!=', Order::GATEWAY_BANK_TRANSFER))
             ->where('created_at', '<=', now()->subMinutes($grace))
             ->get();
 

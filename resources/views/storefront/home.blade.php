@@ -1,4 +1,4 @@
-<x-layouts.storefront title="Home">
+<x-layouts.storefront>
     {{-- Hero slideshow --}}
     @php
         $heroPanels = [
@@ -25,9 +25,18 @@
                             <div class="grid h-full grid-cols-1 lg:grid-cols-2">
                                 <div class="flex items-center {{ $panel['panel'] }} px-6 py-16 sm:px-12 lg:px-16">
                                     <div class="max-w-md">
-                                        <p class="font-display text-4xl uppercase leading-[0.95] {{ $panel['heading'] }} sm:text-5xl lg:text-6xl">
-                                            {{ $slide->headline }}
-                                        </p>
+                                        {{-- Exactly one h1 per page: the first slide's
+                                             headline carries it, later slides are
+                                             ordinary headings. --}}
+                                        @if ($loop->first)
+                                            <h1 class="font-display text-4xl uppercase leading-[0.95] {{ $panel['heading'] }} sm:text-5xl lg:text-6xl">
+                                                {{ $slide->headline }}
+                                            </h1>
+                                        @else
+                                            <p class="font-display text-4xl uppercase leading-[0.95] {{ $panel['heading'] }} sm:text-5xl lg:text-6xl">
+                                                {{ $slide->headline }}
+                                            </p>
+                                        @endif
                                         @if ($slide->subheadline)
                                             <p class="mt-5 max-w-sm {{ $panel['sub'] }}">
                                                 {{ $slide->subheadline }}
@@ -42,7 +51,9 @@
                                     </div>
                                 </div>
                                 <div class="relative hidden overflow-hidden lg:block">
-                                    <img src="{{ $slide->url() }}" alt="{{ $slide->headline }}" loading="lazy"
+                                    <img src="{{ $slide->url() }}" alt="{{ $slide->headline }}"
+                                        @if ($loop->first) loading="eager" fetchpriority="high" @else loading="lazy" @endif
+                                        decoding="async"
                                         onerror="this.onerror=null;this.src='{{ asset('placeholder.svg') }}';"
                                         class="h-full w-full object-cover">
                                 </div>
@@ -50,7 +61,9 @@
                         </div>
                     @empty
                         <div class="swiper-slide flex h-full items-center justify-center bg-ink-900">
-                            <p class="font-display text-3xl uppercase text-paper">Dora Creations</p>
+                            {{-- No slides configured yet, but the page still
+                                 needs its single h1. --}}
+                            <h1 class="font-display text-3xl uppercase text-paper">{{ config('app.name') }}</h1>
                         </div>
                     @endforelse
                 </div>

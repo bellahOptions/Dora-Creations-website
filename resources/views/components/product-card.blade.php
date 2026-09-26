@@ -6,8 +6,11 @@
         class="reveal group block">
         <div class="relative aspect-[4/5] overflow-hidden rounded-2xl bg-ink-100">
             <img src="{{ $product->featuredImageUrl() ?? asset('placeholder.svg') }}"
-                alt="{{ $product->images->first()->alt_text ?? $product->name }}"
+                alt="{{ $product->images->first()?->alt_text ?: $product->name }}"
                 loading="lazy"
+                decoding="async"
+                width="800"
+                height="1000"
                 onerror="this.onerror=null;this.src='{{ asset('placeholder.svg') }}';"
                 class="h-full w-full object-cover transition duration-500 group-hover:scale-105">
 

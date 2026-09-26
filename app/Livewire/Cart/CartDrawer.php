@@ -2,7 +2,6 @@
 
 namespace App\Livewire\Cart;
 
-use App\Models\CartItem;
 use App\Services\CartService;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -30,21 +29,21 @@ class CartDrawer extends Component
 
     public function incrementItem(int $itemId, CartService $cartService): void
     {
-        $item = CartItem::whereKey($itemId)->firstOrFail();
+        $item = $cartService->findOwnedItem($itemId);
         $cartService->updateQuantity($item, $item->quantity + 1);
         $this->dispatch('cart-updated');
     }
 
     public function decrementItem(int $itemId, CartService $cartService): void
     {
-        $item = CartItem::whereKey($itemId)->firstOrFail();
+        $item = $cartService->findOwnedItem($itemId);
         $cartService->updateQuantity($item, $item->quantity - 1);
         $this->dispatch('cart-updated');
     }
 
     public function removeItem(int $itemId, CartService $cartService): void
     {
-        $item = CartItem::whereKey($itemId)->firstOrFail();
+        $item = $cartService->findOwnedItem($itemId);
         $cartService->removeItem($item);
         $this->dispatch('cart-updated');
     }
