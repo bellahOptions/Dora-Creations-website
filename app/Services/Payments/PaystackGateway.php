@@ -31,10 +31,7 @@ class PaystackGateway implements PaymentGateway
                 'currency' => 'NGN',
                 'reference' => $order->order_number,
                 'callback_url' => $callbackUrl,
-                'metadata' => [
-                    'order_id' => $order->id,
-                    'order_number' => $order->order_number,
-                ],
+                'metadata' => $this->metadataFor($order),
             ])
             ->throw();
 
@@ -44,6 +41,43 @@ class PaystackGateway implements PaymentGateway
             'redirect_url' => $data['authorization_url'],
             'reference' => $data['reference'],
         ];
+    }
+
+    /**
+     * Everything the studio knows about the buyer, sent along with the
+     * transaction.
+     *
+     * Paystack's initialize endpoint only takes `email` as a top-level
+     * customer field — `name` and `phone` there are ignored. `metadata` (and
+     * the `custom_fields` inside it) is the documented way to attach them:
+     * they show against the transaction in the Paystack dashboard and come
+     * back on every webhook, which is what lets a payment be matched to a
+     * person and a delivery address.
+     *
+     * @return array<string, mixed>
+     */
+    protected function metadataFor(Order $order): array
+    {
+        $name = trim((string) $order->customerName());
+        $email = trim((string) $order->customerEmail());
+        $phone = trim((string) $order->shipping_phone);
+
+        [$firstName, $lastName] = array_pad(preg_split('/\s+/', $name, 2) ?: [], 2, null);
+
+        return array_filter([
+            'order_id' => $order->id,
+            'order_number' => $order->order_number,
+            'customer_name' => $name,
+            'customer_email' => $email,
+            'customer_phone' => $phone,
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'custom_fields' => array_values(array_filter([
+                $name !== '' ? ['display_name' => 'Customer name', 'variable_name' => 'customer_name', 'value' => $name] : null,
+                $phone !== '' ? ['display_name' => 'Phone', 'variable_name' => 'customer_phone', 'value' => $phone] : null,
+                $email !== '' ? ['display_name' => 'Email', 'variable_name' => 'customer_email', 'value' => $email] : null,
+            ])),
+        ], fn ($value) => $value !== null && $value !== '' && $value !== []);
     }
 
     public function verify(string $reference): array

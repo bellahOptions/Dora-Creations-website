@@ -53,7 +53,77 @@ class CheckoutTest extends TestCase
         $this->assertNotNull($order);
         $this->assertSame($user->id, $order->user_id);
         $this->assertSame(1000000 + 250000, $order->total_kobo);
+
+        // The cart is NOT emptied on the way to the gateway. The customer
+        // hasn't paid yet and may come back to change something, so their
+        // basket has to still be there.
+        $this->assertSame(1, app(CartService::class)->currentCart()->itemCount());
+        $this->assertSame($order->cart_id, app(CartService::class)->currentCart()->id);
+    }
+
+    public function test_the_cart_is_emptied_once_payment_is_confirmed(): void
+    {
+        $user = User::factory()->create();
+        Address::factory()->create(['user_id' => $user->id, 'is_default' => true]);
+        $product = Product::factory()->create(['price_kobo' => 1000000, 'stock_quantity' => 5]);
+
+        $this->actingAs($user);
+        app(CartService::class)->addItem($product, null, 1);
+
+        $order = app(OrderService::class)->createFromCart(
+            app(CartService::class)->currentCart(),
+            [
+                'full_name' => 'Buyer',
+                'phone' => '+2348012345678',
+                'state' => 'Lagos',
+                'city' => 'Lekki',
+                'line1' => '1 Admiralty Way',
+            ],
+            $user,
+            null,
+        );
+
+        $this->assertSame(1, app(CartService::class)->currentCart()->itemCount());
+
+        Http::fake([
+            'api.paystack.co/transaction/verify/*' => Http::response([
+                'status' => true,
+                'data' => ['status' => 'success', 'amount' => $order->total_kobo, 'currency' => 'NGN'],
+            ], 200),
+        ]);
+
+        app(PaymentService::class)->confirm(app(PaystackGateway::class), $order->order_number);
+
         $this->assertSame(0, app(CartService::class)->currentCart()->itemCount());
+    }
+
+    public function test_going_back_and_checking_out_again_supersedes_the_abandoned_attempt(): void
+    {
+        $user = User::factory()->create();
+        Address::factory()->create(['user_id' => $user->id, 'is_default' => true]);
+        $product = Product::factory()->create(['price_kobo' => 1000000, 'stock_quantity' => 5]);
+
+        Http::fake([
+            'api.paystack.co/transaction/initialize' => Http::response([
+                'status' => true,
+                'data' => ['authorization_url' => 'https://checkout.paystack.com/abc123', 'reference' => 'ref'],
+            ], 200),
+        ]);
+
+        $this->actingAs($user);
+        app(CartService::class)->addItem($product, null, 1);
+
+        Livewire::test(CheckoutPage::class)->set('gateway', 'paystack')->call('placeOrder');
+
+        $first = Order::firstOrFail();
+        $this->assertSame(4, $product->fresh()->stock_quantity);
+
+        // Same cart, second attempt (e.g. they added another item or fixed a typo).
+        Livewire::test(CheckoutPage::class)->set('gateway', 'paystack')->call('placeOrder');
+
+        $this->assertSame(2, Order::count());
+        $this->assertSame(Order::STATUS_PAYMENT_FAILED, $first->fresh()->status);
+        $this->assertSame(4, $product->fresh()->stock_quantity, 'Only the live attempt should hold stock');
     }
 
     /**

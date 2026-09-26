@@ -40,6 +40,8 @@
                                         <p class="text-sm font-semibold">{{ $item->product->name }}</p>
                                         @if ($item->variant)
                                             <p class="text-xs text-ink-400">{{ $item->variant->label() }}</p>
+                                        @elseif ($item->product->has_variants)
+                                            <p class="text-xs text-gold">Size/colour to be confirmed</p>
                                         @endif
                                     </div>
                                     <button wire:click="removeItem({{ $item->id }})" class="text-ink-300 hover:text-brand-500" aria-label="Remove item">

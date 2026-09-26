@@ -1,9 +1,16 @@
 <div class="mt-6 space-y-6">
     @if ($product->has_variants)
         @if ($this->optionsMissing)
-            <div class="flex items-start gap-2 rounded-lg border border-ink-100 bg-ink-50 px-4 py-3 text-sm text-ink-600">
-                <x-heroicon-o-exclamation-circle class="mt-0.5 h-5 w-5 flex-shrink-0 text-ink-400" />
-                <span>Size and color options for this item aren't available yet. Please check back soon.</span>
+            {{-- No options configured yet. Rather than blocking the sale we
+                 take the order and confirm the choice afterwards, so the
+                 delivery estimate is stretched to allow for that. --}}
+            <div class="flex items-start gap-2 rounded-lg border border-gold/40 bg-gold/10 px-4 py-3 text-sm text-ink-700">
+                <x-heroicon-o-information-circle class="mt-0.5 h-5 w-5 flex-shrink-0 text-gold" />
+                <span>
+                    <span class="font-semibold">Size and colour aren't set up on this item yet.</span>
+                    Order it anyway and we'll confirm your size and colour with you before it's made, so
+                    delivery takes about {{ \App\Models\Order::EXTRA_DAYS_WITHOUT_VARIANT }} days longer.
+                </span>
             </div>
         @else
             @if (count($this->availableSizes()) > 0)
@@ -84,10 +91,6 @@
                     @endif
                 </span>
                 <span wire:loading wire:target="addToCart">Adding…</span>
-            </button>
-        @elseif ($this->optionsMissing)
-            <button disabled class="flex-1 cursor-not-allowed rounded-full bg-ink-200 px-8 py-3 text-sm font-semibold uppercase tracking-wide text-ink-400">
-                Unavailable
             </button>
         @else
             <button disabled class="flex-1 cursor-not-allowed rounded-full bg-ink-200 px-8 py-3 text-sm font-semibold uppercase tracking-wide text-ink-400">

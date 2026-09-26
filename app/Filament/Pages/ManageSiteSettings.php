@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\Order;
 use App\Models\SiteSetting;
 use App\Services\Payments\PaystackBankResolver;
 use Filament\Forms;
@@ -102,6 +103,15 @@ class ManageSiteSettings extends Page implements HasForms
                         ->prefix('₦')
                         ->formatStateUsing(fn ($state) => $state !== null ? $state / 100 : null)
                         ->dehydrateStateUsing(fn ($state) => $state !== null && $state !== '' ? (int) round($state * 100) : null),
+                    Forms\Components\TextInput::make('delivery_lead_days')
+                        ->label('Standard delivery window (days)')
+                        ->numeric()
+                        ->minValue(1)
+                        ->maxValue(90)
+                        ->default(3)
+                        ->required()
+                        ->helperText('Gives every order an estimated delivery date at checkout. Orders that still need a size/colour confirmed get '.Order::EXTRA_DAYS_WITHOUT_VARIANT.' days on top automatically.')
+                        ->columnSpanFull(),
                 ])->columns(2),
 
             Forms\Components\Section::make('Bank transfer')

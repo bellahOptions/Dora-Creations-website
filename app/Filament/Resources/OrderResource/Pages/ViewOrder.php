@@ -144,6 +144,9 @@ class ViewOrder extends ViewRecord
                             default => 'warning',
                         }),
                     Infolist\TextEntry::make('created_at')->label('Placed')->dateTime('d M Y, H:i'),
+                    Infolist\TextEntry::make('estimated_delivery_at')->label('Est. delivery')
+                        ->dateTime('D, j M Y')->placeholder('—'),
+                    Infolist\IconEntry::make('needs_variant_confirmation')->label('Confirm size/colour')->boolean(),
                     Infolist\TextEntry::make('paid_at')->label('Paid')->dateTime('d M Y, H:i')->placeholder('Not paid'),
                     Infolist\TextEntry::make('payment_gateway')->formatStateUsing(fn ($state) => $state ? Str::headline($state) : '—'),
                     Infolist\TextEntry::make('payment_reference')->label('Reference')->placeholder('—'),

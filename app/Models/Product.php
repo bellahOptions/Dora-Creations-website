@@ -171,6 +171,13 @@ class Product extends Model
     public function isInStock(): bool
     {
         if ($this->has_variants) {
+            // A variant product whose variants haven't been set up yet is
+            // still orderable — the customer is told we'll confirm the option
+            // afterwards — so it must not read as sold out.
+            if (! $this->variants()->exists()) {
+                return true;
+            }
+
             return $this->variants()->where('stock_quantity', '>', 0)->exists();
         }
 

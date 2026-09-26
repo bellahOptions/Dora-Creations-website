@@ -24,6 +24,7 @@ class SiteSetting extends Model
         'bank_account_number',
         'bank_account_name',
         'bank_transfer_note',
+        'delivery_lead_days',
     ];
 
     protected function casts(): array
@@ -32,6 +33,15 @@ class SiteSetting extends Model
             'maintenance_mode' => 'boolean',
             'bank_transfer_enabled' => 'boolean',
         ];
+    }
+
+    /**
+     * Standard delivery window in days, used to give every order an estimated
+     * delivery date at checkout.
+     */
+    public function deliveryLeadDays(): int
+    {
+        return max(1, (int) ($this->delivery_lead_days ?? 3));
     }
 
     /**
@@ -56,6 +66,7 @@ class SiteSetting extends Model
             'maintenance_mode' => false,
             'site_name' => 'Dora Creations',
             'shipping_flat_rate_kobo' => 250000,
+            'delivery_lead_days' => 3,
         ]);
     }
 }

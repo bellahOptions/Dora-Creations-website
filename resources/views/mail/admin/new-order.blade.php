@@ -5,7 +5,7 @@
 
 <x-mail::panel>
 @foreach ($order->items as $item)
-**{{ $item->quantity }}x** {{ $item->product_name }}{{ $item->variant_label ? " ({$item->variant_label})" : '' }}
+**{{ $item->quantity }}x** {{ $item->product_name }}{{ $item->variant_label ? " ({$item->variant_label})" : ($item->product?->has_variants ? ' (size/colour to be confirmed)' : '') }}
 
 @endforeach
 </x-mail::panel>

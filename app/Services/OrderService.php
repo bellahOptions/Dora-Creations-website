@@ -67,7 +67,37 @@ class OrderService
 
         $discountKobo = $discount?->calculateDiscount($subtotal) ?? 0;
 
-        return DB::transaction(function () use ($cart, $shipping, $user, $guestEmail, $customerNote, $subtotal, $shippingKobo, $discount, $discountKobo, $paymentGateway) {
+        // An item whose size/colour couldn't be chosen (no options configured
+        // yet) can still be bought — the studio confirms it afterwards, which
+        // is why those orders get a longer delivery estimate.
+        $needsVariantConfirmation = $cart->items->contains(
+            fn ($item) => ! $item->product_variant_id && $item->product?->has_variants,
+        );
+
+        $deliveryDays = $settings->deliveryLeadDays()
+            + ($needsVariantConfirmation ? Order::EXTRA_DAYS_WITHOUT_VARIANT : 0);
+
+        return DB::transaction(function () use ($cart, $shipping, $user, $guestEmail, $customerNote, $subtotal, $shippingKobo, $discount, $discountKobo, $paymentGateway, $needsVariantConfirmation, $deliveryDays) {
+            // Any earlier unpaid card checkout from this same cart is
+            // superseded: the shopper went back to edit, so the stale attempt's
+            // stock hold is released now instead of being left to rot until the
+            // reconciler sweeps it. Bank transfer orders are excluded — that
+            // money may already be on its way and an admin still has to be able
+            // to confirm it. Done inside the transaction so a failed attempt
+            // here (e.g. sold out) leaves the previous one alone.
+            Order::query()
+                ->where('cart_id', $cart->id)
+                ->whereNull('payment_gateway')
+                ->where('status', Order::STATUS_PENDING_PAYMENT)
+                ->whereNull('paid_at')
+                ->get()
+                ->each(fn (Order $superseded) => $superseded->recordStatus(
+                    Order::STATUS_PAYMENT_FAILED,
+                    'Superseded: the customer went back and checked out again from the same cart.',
+                    null,
+                    notify: false,
+                ));
+
             $order = Order::create([
                 'user_id' => $user?->id,
                 'guest_email' => $user ? null : $guestEmail,
@@ -88,24 +118,20 @@ class OrderService
                 'shipping_postal_code' => $shipping['postal_code'] ?? null,
                 'payment_gateway' => $paymentGateway,
                 'customer_note' => $customerNote,
+                'cart_id' => $cart->id,
+                'needs_variant_confirmation' => $needsVariantConfirmation,
+                'estimated_delivery_at' => now()->addDays($deliveryDays),
             ]);
 
             foreach ($cart->items as $item) {
                 $product = $item->product;
 
-                // A product can be delisted, or a variant removed, while it
-                // sits in someone's cart. Never let that become an order.
+                // A product can be delisted while it sits in someone's cart.
+                // Never let that become an order.
                 if (! $product->is_published) {
                     throw new CheckoutException(
                         "Product {$product->id} ({$product->name}) is no longer published.",
                         "\"{$product->name}\" is no longer available. Please remove it from your cart and try again.",
-                    );
-                }
-
-                if ($product->has_variants && ! $item->variant) {
-                    throw new CheckoutException(
-                        "Cart item {$item->id} has no variant but product {$product->id} requires one.",
-                        "\"{$product->name}\" needs a size/color chosen. Please remove it from your cart and add it again.",
                     );
                 }
 

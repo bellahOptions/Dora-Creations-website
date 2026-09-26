@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\ProductResource\Pages;
 use App\Filament\Support\VerifiedUpload;
 use App\Models\Category;
+use App\Models\Order;
 use App\Models\Product;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -125,7 +126,7 @@ class ProductResource extends Resource
 
                 Forms\Components\Section::make('Variants')
                     ->visible(fn (Forms\Get $get) => (bool) $get('has_variants'))
-                    ->description('Add the options customers choose from on the product page, such as size and color. Use the generator for every combination, or add variants one by one. At least one variant is required — without one the storefront has no options to show and the product can\'t be bought.')
+                    ->description('Add the options customers choose from on the product page, such as size and color. Use the generator for every combination, or add variants one by one. You can also leave this empty for now — the product stays on sale and you confirm each buyer\'s size/colour afterwards.')
                     ->schema([
                         Forms\Components\Fieldset::make('Generate combinations')->schema([
                             Forms\Components\TagsInput::make('generate_sizes')
@@ -202,15 +203,14 @@ class ProductResource extends Resource
                             ->itemLabel(fn (array $state) => collect([$state['size'] ?? null, $state['color'] ?? null])->filter()->implode(' / ') ?: 'New variant')
                             ->collapsible()
                             ->columnSpanFull()
-                            // A variant product with no variant rows renders no size/color
-                            // options on the storefront, leaving customers with nothing to
-                            // pick — so refuse to save that broken state.
-                            ->required(fn (Forms\Get $get): bool => (bool) $get('has_variants'))
-                            ->minItems(fn (Forms\Get $get): ?int => $get('has_variants') ? 1 : null)
-                            ->validationMessages([
-                                'required' => 'Add at least one size/color variant. Without one, customers see no options to choose from on the product page.',
-                                'min' => 'Add at least one size/color variant. Without one, customers see no options to choose from on the product page.',
-                            ]),
+                            // Deliberately NOT required: a variant product with no
+                            // variants is still sellable — customers order it and
+                            // the studio confirms the size/colour afterwards, which
+                            // is why those orders get 5 extra days. See
+                            // Order::needs_variant_confirmation.
+                            ->helperText(fn (Forms\Get $get): ?string => $get('has_variants')
+                                ? 'Leave this empty if the options aren\'t decided yet. Customers can still order, and you\'ll confirm their size/colour afterwards — those orders take '.Order::EXTRA_DAYS_WITHOUT_VARIANT.' days longer.'
+                                : null),
                     ]),
 
                 Forms\Components\Section::make('Featured image')

@@ -4,12 +4,17 @@ namespace Tests\Feature;
 
 use App\Filament\Resources\ProductResource\Pages\CreateProduct;
 use App\Livewire\Shop\AddToCart;
+use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Category;
+use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Models\SiteSetting;
 use App\Models\User;
+use App\Services\OrderService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Livewire\Livewire;
 use Livewire\Features\SupportTesting\Testable;
 use Tests\TestCase;
@@ -87,26 +92,82 @@ class ProductVariantsTest extends TestCase
         $this->assertStringContainsString('S / Black', $html);
     }
 
-    public function test_options_are_reported_unavailable_when_no_variants_are_saved(): void
+    public function test_a_variant_product_with_no_options_can_still_be_bought(): void
     {
-        // The exact broken state from the reported screenshot: flagged as
-        // variant-based, but zero variant rows stored.
+        // The reported dead end: flagged as variant-based, but no variant rows
+        // stored. Rather than blocking the sale we take the order and confirm
+        // the choice afterwards, which is why delivery takes longer.
         $product = $this->variantProduct(['is_preorder' => true]);
 
         $html = $this->get('/shop/clarity-statement-tees')->assertOk()->getContent();
 
         $this->assertStringNotContainsString('selectSize', $html);
         $this->assertStringNotContainsString('selectColor', $html);
-        $this->assertStringContainsString("aren't available yet", $html);
-        $this->assertStringContainsString('Unavailable', $html);
+        $this->assertStringContainsString("aren't set up on this item yet", $html);
+        $this->assertStringNotContainsString('Unavailable', $html);
 
-        $component = Livewire::test(AddToCart::class, ['product' => $product])->call('addToCart');
+        Livewire::test(AddToCart::class, ['product' => $product])
+            ->call('addToCart')
+            ->assertHasNoErrors();
 
-        $this->assertSame(
-            'This item is not available in any size or color yet. Please check back soon.',
-            $component->errors()->toArray()['variant'][0] ?? null,
+        $this->assertSame(1, CartItem::count(), 'The item should reach the cart');
+        $this->assertNull(CartItem::first()->product_variant_id);
+    }
+
+    public function test_an_order_without_a_chosen_variant_is_flagged_and_takes_longer(): void
+    {
+        $product = $this->variantProduct();
+        $cart = Cart::create(['cart_token' => (string) Str::uuid()]);
+        $cart->items()->create([
+            'product_id' => $product->id,
+            'quantity' => 1,
+            'unit_price_kobo' => $product->price_kobo,
+        ]);
+
+        $order = app(OrderService::class)->createFromCart(
+            $cart,
+            ['full_name' => 'Buyer', 'phone' => '+2348012345678', 'state' => 'Lagos', 'city' => 'Lekki', 'line1' => '1 Way'],
+            null,
+            'buyer@example.com',
         );
-        $this->assertSame(0, CartItem::count(), 'Nothing should reach the cart');
+
+        $this->assertTrue($order->needsVariantConfirmation());
+        $this->assertSame(
+            SiteSetting::current()->deliveryLeadDays() + Order::EXTRA_DAYS_WITHOUT_VARIANT,
+            (int) round(now()->diffInDays($order->estimated_delivery_at)),
+        );
+    }
+
+    public function test_an_order_with_a_chosen_variant_uses_the_standard_delivery_window(): void
+    {
+        $product = $this->variantProduct();
+        $variant = ProductVariant::factory()->create([
+            'product_id' => $product->id,
+            'size' => 'M',
+            'color' => 'Black',
+            'stock_quantity' => 5,
+        ]);
+
+        $cart = Cart::create(['cart_token' => (string) Str::uuid()]);
+        $cart->items()->create([
+            'product_id' => $product->id,
+            'product_variant_id' => $variant->id,
+            'quantity' => 1,
+            'unit_price_kobo' => $product->price_kobo,
+        ]);
+
+        $order = app(OrderService::class)->createFromCart(
+            $cart,
+            ['full_name' => 'Buyer', 'phone' => '+2348012345678', 'state' => 'Lagos', 'city' => 'Lekki', 'line1' => '1 Way'],
+            null,
+            'buyer@example.com',
+        );
+
+        $this->assertFalse($order->needsVariantConfirmation());
+        $this->assertSame(
+            SiteSetting::current()->deliveryLeadDays(),
+            (int) round(now()->diffInDays($order->estimated_delivery_at)),
+        );
     }
 
     public function test_choosing_a_variant_adds_that_variant_to_the_cart(): void
@@ -136,8 +197,10 @@ class ProductVariantsTest extends TestCase
             ->assertSet('color', 'White');
     }
 
-    public function test_admin_cannot_save_a_variant_product_without_variants(): void
+    public function test_admin_can_save_a_variant_product_without_variants_yet(): void
     {
+        // An intentionally supported state: the product stays on sale and the
+        // studio confirms each buyer's size/colour afterwards.
         $admin = User::factory()->create(['is_admin' => true]);
         $category = Category::factory()->create();
 
@@ -146,10 +209,13 @@ class ProductVariantsTest extends TestCase
         $this->fillProductForm($component, $category, hasVariants: true);
         $component->call('create');
 
-        $errors = $component->errors()->toArray();
+        $this->assertSame([], $component->errors()->toArray());
 
-        $this->assertArrayHasKey('data.variants', $errors, 'Saving a variant product with no variants must be blocked');
-        $this->assertDatabaseMissing('products', ['slug' => 'clarity-statement-tees']);
+        $product = Product::where('slug', 'clarity-statement-tees')->firstOrFail();
+
+        $this->assertTrue($product->has_variants);
+        $this->assertSame(0, $product->variants()->count());
+        $this->assertTrue($product->canPurchase(), 'It must remain orderable with no options configured');
     }
 
     public function test_admin_can_save_a_variant_product_with_variants(): void

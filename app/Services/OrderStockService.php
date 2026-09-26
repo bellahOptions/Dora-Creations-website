@@ -45,6 +45,14 @@ class OrderStockService
                 continue;
             }
 
+            // An item bought without choosing an option (none were set up)
+            // has no per-variant stock to hold, and the product's own stock
+            // column is unused while variants are enabled. Nothing to take —
+            // the studio confirms the option before making it up.
+            if (! $item->product_variant_id && $item->product?->has_variants) {
+                continue;
+            }
+
             $quantity = (int) $item->quantity;
 
             $taken = $item->product_variant_id
@@ -86,6 +94,10 @@ class OrderStockService
 
         foreach ($order->items as $item) {
             if ($item->is_preorder) {
+                continue;
+            }
+
+            if (! $item->product_variant_id && $item->product?->has_variants) {
                 continue;
             }
 

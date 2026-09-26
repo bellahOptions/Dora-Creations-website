@@ -43,6 +43,12 @@ class Order extends Model
     public const GATEWAY_BANK_TRANSFER = 'bank_transfer';
 
     /**
+     * Extra days added to the delivery estimate when we have to chase the
+     * customer for a size/colour they weren't able to choose at checkout.
+     */
+    public const EXTRA_DAYS_WITHOUT_VARIANT = 5;
+
+    /**
      * Statuses an admin can move an order through after payment is confirmed.
      */
     public const MANAGEABLE_STATUSES = [
@@ -79,6 +85,9 @@ class Order extends Model
         'transfer_declared_at',
         'stock_reserved_at',
         'stock_released_at',
+        'cart_id',
+        'needs_variant_confirmation',
+        'estimated_delivery_at',
         'customer_note',
     ];
 
@@ -89,6 +98,8 @@ class Order extends Model
             'transfer_declared_at' => 'datetime',
             'stock_reserved_at' => 'datetime',
             'stock_released_at' => 'datetime',
+            'estimated_delivery_at' => 'datetime',
+            'needs_variant_confirmation' => 'boolean',
         ];
     }
 
@@ -139,7 +150,7 @@ class Order extends Model
         return $this->hasMany(Payment::class);
     }
 
-    public function recordStatus(string $status, ?string $note = null, ?User $changedBy = null): void
+    public function recordStatus(string $status, ?string $note = null, ?User $changedBy = null, bool $notify = true): void
     {
         $statusChanged = $this->status !== $status;
 
@@ -174,7 +185,7 @@ class Order extends Model
 
         // Re-submitting the same status (e.g. an admin adding a note without
         // actually changing anything) shouldn't re-send emails that already went out.
-        if ($statusChanged) {
+        if ($statusChanged && $notify) {
             $this->notifyStatusChange($status);
         }
     }
@@ -258,6 +269,20 @@ class Order extends Model
     public function hasPreorderItems(): bool
     {
         return $this->items->contains('is_preorder', true);
+    }
+
+    /**
+     * True when we still have to confirm a size/colour with the customer
+     * before the order can be made up.
+     */
+    public function needsVariantConfirmation(): bool
+    {
+        return (bool) $this->needs_variant_confirmation;
+    }
+
+    public function estimatedDeliveryLabel(): ?string
+    {
+        return $this->estimated_delivery_at?->format('D, j M Y');
     }
 
     public function statusLabel(): string

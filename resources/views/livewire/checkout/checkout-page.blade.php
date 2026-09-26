@@ -127,7 +127,14 @@
                                     <span class="ml-1 rounded-full bg-ink-900 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-paper">Pre-order</span>
                                 @endif
                             </p>
-                            <p class="text-ink-400">{{ $item->variant?->label() }} · Qty {{ $item->quantity }}</p>
+                            <p class="text-ink-400">
+                                @if ($item->variant)
+                                    {{ $item->variant->label() }}
+                                @elseif ($item->product->has_variants)
+                                    <span class="text-gold">Size/colour to be confirmed</span>
+                                @endif
+                                · Qty {{ $item->quantity }}
+                            </p>
                         </div>
                         <span class="font-semibold">{{ $item->formattedLineTotal() }}</span>
                     </li>

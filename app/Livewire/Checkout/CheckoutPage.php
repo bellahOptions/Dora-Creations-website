@@ -273,9 +273,11 @@ class CheckoutPage extends Component
             return;
         }
 
-        $orderService->clearCart($cart);
-        $this->dispatch('cart-updated');
-
+        // The cart is deliberately NOT emptied here. The customer hasn't paid
+        // yet — they may land on the gateway page, realise they forgot
+        // something or mistyped their details, and come back. Emptying the
+        // cart now would leave them with nothing to return to. It's emptied
+        // when the payment is actually confirmed (see PaymentService::settle).
         $this->redirect($result['redirect_url']);
     }
 

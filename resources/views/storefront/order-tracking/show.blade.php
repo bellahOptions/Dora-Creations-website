@@ -175,6 +175,8 @@
                                 </p>
                                 @if ($item->variant_label)
                                     <p class="text-sm text-ink-400">{{ $item->variant_label }}</p>
+                                @elseif ($item->product?->has_variants)
+                                    <p class="text-sm text-gold">Size/colour to be confirmed</p>
                                 @endif
                                 <p class="text-sm text-ink-400">Qty {{ $item->quantity }}</p>
                             </div>
@@ -197,6 +199,22 @@
             </div>
 
             <div class="h-fit space-y-6">
+                @if ($order->estimated_delivery_at)
+                    <div class="rounded-2xl border border-ink-100 bg-paper-soft p-6">
+                        <h2 class="font-display text-sm uppercase">Estimated delivery</h2>
+                        <p class="mt-3 font-semibold text-ink-900">{{ $order->estimatedDeliveryLabel() }}</p>
+                        @if ($order->needsVariantConfirmation())
+                            <p class="mt-2 text-xs text-ink-500">
+                                This order includes an item whose size/colour still has to be confirmed with you,
+                                so the estimate already allows {{ \App\Models\Order::EXTRA_DAYS_WITHOUT_VARIANT }} extra days
+                                for that.
+                            </p>
+                        @else
+                            <p class="mt-2 text-xs text-ink-500">We'll email you as soon as your order ships.</p>
+                        @endif
+                    </div>
+                @endif
+
                 <div class="rounded-2xl border border-ink-100 bg-paper-soft p-6">
                     <h2 class="font-display text-sm uppercase">Delivery address</h2>
                     <p class="mt-3 text-sm text-ink-600">{{ $order->shipping_full_name }}</p>

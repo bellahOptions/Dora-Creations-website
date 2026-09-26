@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Contracts\PaymentGateway;
 use App\Exceptions\InsufficientStockException;
+use App\Models\Cart;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\User;
@@ -183,6 +184,11 @@ class PaymentService
 
         $order->recordStatus(Order::STATUS_PROCESSING, $note, $changedBy);
 
+        // Payment is in: now the cart can go. It was left intact through the
+        // gateway redirect so an interrupted checkout could be resumed, and
+        // this is the moment the shopper's basket genuinely becomes an order.
+        $this->clearOrderCart($order);
+
         if ($stockWarning !== null) {
             $order->statusHistories()->create([
                 'status' => Order::STATUS_PROCESSING,
@@ -201,6 +207,20 @@ class PaymentService
         $payment->order_id = $order->id;
 
         return $payment;
+    }
+
+    /**
+     * Empty the cart the order was placed from. Works from either the browser
+     * callback or the gateway webhook, since the order carries its cart id —
+     * the webhook has no session to read a cart from.
+     */
+    protected function clearOrderCart(Order $order): void
+    {
+        if (! $order->cart_id) {
+            return;
+        }
+
+        Cart::whereKey($order->cart_id)->first()?->items()->delete();
     }
 
     protected function notifyOrderConfirmed(Order $order): void

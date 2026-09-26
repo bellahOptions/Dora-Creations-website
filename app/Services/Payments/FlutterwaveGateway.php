@@ -43,6 +43,9 @@ class FlutterwaveGateway implements PaymentGateway
                 'meta' => [
                     'order_id' => $order->id,
                     'order_number' => $order->order_number,
+                    'customer_name' => $order->customerName(),
+                    'customer_email' => $order->customerEmail(),
+                    'customer_phone' => $order->shipping_phone,
                 ],
             ])
             ->throw();

@@ -114,6 +114,13 @@ class AddToCart extends Component
     public function getInStockProperty(): bool
     {
         if ($this->product->has_variants) {
+            // No options configured yet: there's no per-variant stock to check,
+            // and we accept the order anyway so the studio can confirm the
+            // choice afterwards (it just takes longer to deliver).
+            if ($this->optionsMissing) {
+                return true;
+            }
+
             return (bool) $this->selectedVariant?->isInStock();
         }
 
@@ -127,10 +134,6 @@ class AddToCart extends Component
      */
     public function getCanPurchaseProperty(): bool
     {
-        if ($this->optionsMissing) {
-            return false;
-        }
-
         return $this->product->is_preorder || $this->inStock;
     }
 
@@ -148,13 +151,10 @@ class AddToCart extends Component
     {
         $this->resetErrorBag();
 
-        if ($this->optionsMissing) {
-            $this->addError('variant', 'This item is not available in any size or color yet. Please check back soon.');
-
-            return;
-        }
-
-        if ($this->product->has_variants && ! $this->selectedVariant) {
+        // Only demand a choice when there is actually something to choose.
+        // With no options configured the order goes through and the studio
+        // confirms the size/colour afterwards.
+        if ($this->product->has_variants && ! $this->optionsMissing && ! $this->selectedVariant) {
             $this->addError('variant', 'Please select a size/color.');
 
             return;

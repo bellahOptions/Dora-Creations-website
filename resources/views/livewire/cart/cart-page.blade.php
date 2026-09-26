@@ -24,6 +24,8 @@
                                     <p class="font-semibold">{{ $item->product->name }}</p>
                                     @if ($item->variant)
                                         <p class="mt-1 text-sm text-ink-400">{{ $item->variant->label() }}</p>
+                                    @elseif ($item->product->has_variants)
+                                        <p class="mt-1 text-sm text-gold">Size/colour to be confirmed</p>
                                     @endif
                                     <p class="mt-1 text-sm text-ink-500">{{ app(\App\Services\CurrencyService::class)->format($item->unit_price_kobo) }} each</p>
 
