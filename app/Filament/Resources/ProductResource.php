@@ -268,38 +268,71 @@ class ProductResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn ($query) => $query->with('images'))
+            // The thumbnail and the stock badge both need relations; without
+            // this the list fires a query per row.
+            ->modifyQueryUsing(fn ($query) => $query->with(['images', 'variants']))
             ->columns([
-                Tables\Columns\Layout\Split::make([
-                    Tables\Columns\ImageColumn::make('featured_image_path')
-                        ->disk(config('filesystems.image_disk'))
-                        ->label('Image')
-                        ->state(fn (Product $record) => $record->featured_image_path ?: $record->images->first()?->path)
-                        ->grow(false),
-                    Tables\Columns\Layout\Stack::make([
-                        Tables\Columns\TextColumn::make('name')->searchable()->sortable()->weight('bold'),
-                        Tables\Columns\TextColumn::make('category.name')->label('Category')->sortable()->color('gray')->size('sm'),
-                    ]),
-                    Tables\Columns\Layout\Stack::make([
-                        Tables\Columns\TextColumn::make('price_kobo')
-                            ->label('Price')
-                            ->formatStateUsing(fn ($state) => '₦'.number_format($state / 100, 2))
-                            ->sortable(),
-                        Tables\Columns\TextColumn::make('stock_quantity')->label('Stock')->sortable()->color('gray')->size('sm'),
-                    ])->alignEnd(),
-                    Tables\Columns\Layout\Stack::make([
-                        Tables\Columns\ToggleColumn::make('is_published')->label('Published'),
-                        Tables\Columns\ToggleColumn::make('is_featured')->label('Featured'),
-                        Tables\Columns\ToggleColumn::make('is_preorder')->label('Pre-order'),
-                    ]),
-                ])->from('md'),
+                Tables\Columns\ImageColumn::make('thumbnail')
+                    ->label('')
+                    ->state(fn (Product $record) => $record->featured_image_path ?: $record->images->first()?->path)
+                    ->disk(config('filesystems.image_disk'))
+                    ->size(44)
+                    ->extraImgAttributes(['class' => 'rounded-lg object-cover']),
+
+                Tables\Columns\TextColumn::make('name')
+                    ->searchable()
+                    ->sortable()
+                    ->weight('bold')
+                    ->description(fn (Product $record): ?string => $record->category?->name),
+
+                Tables\Columns\TextColumn::make('price_kobo')
+                    ->label('Price')
+                    ->formatStateUsing(fn ($state) => '₦'.number_format($state / 100, 2))
+                    ->sortable(),
+
+                // Reads "24 in stock" / "180 across 12 options" / "Out of stock"
+                // rather than a bare number that means nothing for variant
+                // products (their own stock column stays 0).
+                Tables\Columns\TextColumn::make('stock_quantity')
+                    ->label('Stock')
+                    ->badge()
+                    ->state(fn (Product $record): string => $record->stockSummary())
+                    ->color(fn (Product $record): string => $record->canPurchase() ? 'success' : 'danger'),
+
+                // Live/Draft, plus two clearly-labelled flags. These used to be
+                // three unlabelled toggle switches stacked on top of each other,
+                // which told you neither what they were nor what they were set to.
+                Tables\Columns\TextColumn::make('is_published')
+                    ->label('Status')
+                    ->badge()
+                    ->formatStateUsing(fn (bool $state): string => $state ? 'Live' : 'Draft')
+                    ->color(fn (bool $state): string => $state ? 'success' : 'gray'),
+
+                Tables\Columns\IconColumn::make('is_featured')
+                    ->label('Featured')
+                    ->state(fn (Product $record): bool => (bool) $record->is_featured)
+                    ->icon(fn (bool $state): string => $state ? 'heroicon-s-star' : 'heroicon-o-minus')
+                    ->color(fn (bool $state): string => $state ? 'warning' : 'gray'),
+
+                Tables\Columns\IconColumn::make('is_preorder')
+                    ->label('Pre-order')
+                    ->state(fn (Product $record): bool => (bool) $record->is_preorder)
+                    ->icon(fn (bool $state): string => $state ? 'heroicon-o-clock' : 'heroicon-o-minus')
+                    ->color(fn (bool $state): string => $state ? 'info' : 'gray'),
             ])
             ->defaultSort('created_at', 'desc')
+            // Without this Filament's "Sort by" control reads "-", because the
+            // default sort column isn't one of the visible ones.
+            ->defaultSortOptionLabel('Newest first')
+            // Infinite scrolling loads the next chunk automatically; these are
+            // the starting chunk and the ceiling the pager would offer.
+            ->paginated([25, 50, 100])
+            ->defaultPaginationPageOption(25)
             ->filters([
                 Tables\Filters\SelectFilter::make('category_id')
                     ->label('Category')
                     ->options(fn () => Category::orderBy('name')->pluck('name', 'id')),
-                Tables\Filters\TernaryFilter::make('is_published'),
+                Tables\Filters\TernaryFilter::make('is_published')->label('Live'),
                 Tables\Filters\TernaryFilter::make('is_featured'),
                 Tables\Filters\TernaryFilter::make('is_preorder'),
             ])

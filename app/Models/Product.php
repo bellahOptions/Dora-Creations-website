@@ -171,6 +171,18 @@ class Product extends Model
     public function isInStock(): bool
     {
         if ($this->has_variants) {
+            // Use the loaded relation when the caller eager-loaded it (the
+            // admin list does), so a page of products doesn't fire a stock
+            // query per row.
+            if ($this->relationLoaded('variants')) {
+                if ($this->variants->isEmpty()) {
+                    // Variants not set up yet — still orderable, see below.
+                    return true;
+                }
+
+                return $this->variants->contains(fn (ProductVariant $variant) => $variant->stock_quantity > 0);
+            }
+
             // A variant product whose variants haven't been set up yet is
             // still orderable — the customer is told we'll confirm the option
             // afterwards — so it must not read as sold out.
@@ -182,6 +194,31 @@ class Product extends Model
         }
 
         return $this->stock_quantity > 0;
+    }
+
+    /**
+     * Human-readable stock state for the admin list, where a variant
+     * product's own stock column is meaningless (it stays 0).
+     */
+    public function stockSummary(): string
+    {
+        if ($this->has_variants) {
+            $variants = $this->relationLoaded('variants') ? $this->variants : $this->variants()->get();
+
+            if ($variants->isEmpty()) {
+                return 'No options yet';
+            }
+
+            $total = (int) $variants->sum('stock_quantity');
+
+            return $total > 0
+                ? $total.' across '.$variants->count().' options'
+                : 'Out of stock';
+        }
+
+        return $this->stock_quantity > 0
+            ? $this->stock_quantity.' in stock'
+            : 'Out of stock';
     }
 
     /**
